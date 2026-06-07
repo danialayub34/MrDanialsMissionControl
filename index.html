@@ -58,6 +58,36 @@
     .sched-days { font-size: 0.65rem; color: var(--ink-faint); }
     .sched-dest { font-size: 0.65rem; color: var(--ink-faint); }
 
+    /* Week Schedule — overview section */
+    .week-sched-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem 0.9rem; margin-bottom: 1.1rem; }
+    .week-sched-hd { display: flex; align-items: baseline; gap: 0.55rem; margin-bottom: 0.85rem; }
+    .week-sched-title { font-size: 0.72rem; font-weight: 600; color: var(--ink-light); letter-spacing: 0.05em; text-transform: uppercase; }
+    .week-sched-range { font-size: 0.68rem; color: var(--ink-faint); }
+    .day-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.45rem; margin-bottom: 0.85rem; }
+    .day-card { background: var(--cream); border: 1px solid var(--border); border-radius: 9px; padding: 0.6rem 0.65rem; }
+    .day-card.today { background: var(--accent-light); border-color: var(--accent); }
+    .day-name { font-size: 0.68rem; font-weight: 600; color: var(--ink-faint); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .day-card.today .day-name { color: var(--accent); }
+    .day-shift { font-size: 0.73rem; font-weight: 500; color: var(--ink); line-height: 1.3; }
+    .day-leave { font-size: 0.65rem; color: var(--ink-light); margin-top: 0.22rem; }
+    .day-card.today .day-leave { color: var(--accent); font-weight: 500; }
+    .day-tasks { font-size: 0.6rem; color: var(--ink-faint); margin-top: 0.22rem; line-height: 1.4; }
+    .day-override { font-size: 0.62rem; color: #9a5430; background: #fce8dc; border-radius: 4px; padding: 0.12rem 0.35rem; margin-top: 0.22rem; display: inline-block; }
+    .week-notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.6rem; }
+    .week-notes-field { display: flex; flex-direction: column; gap: 0.22rem; }
+    .week-notes-label { font-size: 0.65rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .week-notes-textarea { font-family: inherit; font-size: 0.75rem; padding: 0.42rem 0.6rem; border: 1px solid var(--border); border-radius: 8px; background: var(--warm-white); color: var(--ink); resize: vertical; min-height: 56px; outline: none; line-height: 1.5; width: 100%; box-sizing: border-box; }
+    .week-notes-textarea:focus { border-color: var(--accent); }
+    .week-notes-save-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.55rem; }
+    .week-notes-save-btn { font-family: inherit; font-size: 0.73rem; background: var(--accent); color: #fff; border: none; border-radius: 7px; padding: 0.34rem 0.9rem; cursor: pointer; transition: background var(--transition); }
+    .week-notes-save-btn:hover { background: var(--accent-mid); }
+    .week-notes-save-btn:disabled { background: var(--border); color: var(--ink-faint); cursor: not-allowed; }
+    .week-notes-msg { font-size: 0.7rem; color: var(--accent); }
+    @media (max-width: 700px) {
+      .day-cards { grid-template-columns: repeat(3, 1fr); }
+      .week-notes-grid { grid-template-columns: 1fr; }
+    }
+
     /* Main */
     .main { flex: 1; overflow-y: auto; padding: 1.4rem; display: flex; flex-direction: column; gap: 1.1rem; }
     .tab-bar { display: flex; gap: 0.2rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.28rem; width: fit-content; flex-wrap: wrap; }
@@ -454,7 +484,6 @@
     <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
       <div class="tab-bar">
         <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
-        <button class="tab-btn" onclick="switchTab('brief',this)">Morning Brief</button>
         <button class="tab-btn" onclick="switchTab('spark',this)">Spark <span class="tab-count" id="tc-sparks">–</span></button>
         <button class="tab-btn" onclick="switchTab('threads',this)">Inquiry Threads <span class="tab-count" id="tc-threads">–</span></button>
         <button class="tab-btn" onclick="switchTab('investigations',this)">Investigations <span class="tab-count" id="tc-cycles">–</span></button>
@@ -467,12 +496,30 @@
 
     <!-- Overview -->
     <div class="tab-panel active" id="panel-overview">
+      <!-- Week Schedule -->
+      <div class="week-sched-section">
+        <div class="week-sched-hd">
+          <span class="week-sched-title">This week</span>
+          <span class="week-sched-range" id="week-range"></span>
+        </div>
+        <div class="day-cards" id="day-cards"></div>
+        <div class="week-notes-grid">
+          <div class="week-notes-field">
+            <label class="week-notes-label">Altered workdays</label>
+            <textarea class="week-notes-textarea" id="wn-overrides" placeholder="e.g. Tuesday shifted to 8:30am – 5:30pm&#10;Friday — no health screening"></textarea>
+          </div>
+          <div class="week-notes-field">
+            <label class="week-notes-label">Meetings this week</label>
+            <textarea class="week-notes-textarea" id="wn-meetings" placeholder="e.g. Monday 3pm — team debrief&#10;Wednesday 9am — parent meeting (5Kai)"></textarea>
+          </div>
+        </div>
+        <div class="week-notes-save-row">
+          <button class="week-notes-save-btn" id="wn-save-btn" onclick="saveWeekNotes()">Save</button>
+          <span class="week-notes-msg" id="wn-msg"></span>
+        </div>
+      </div>
+      <!-- Living inquiry spaces -->
       <div id="spaces-container"><div class="loading"><span class="spinner"></span>Loading spaces…</div></div>
-    </div>
-
-    <!-- Morning Brief -->
-    <div class="tab-panel" id="panel-brief">
-      <div id="brief-container"><div class="loading"><span class="spinner"></span>Loading brief…</div></div>
     </div>
 
     <!-- Threads -->
@@ -728,10 +775,11 @@
       const { data: sp } = await client.from('sparks').select('*').order('date_logged', { ascending: false })
       allSparks = sp || []
 
-      const { data: b } = await client.from('briefs').select('*').eq('date', sgtToday()).limit(1)
+      const weekStart = getWeekStart()
+      const { data: wn } = await client.from('week_notes').select('*').eq('week_start', weekStart).limit(1)
 
       allThreads = t; allCycles = c; allCareNotes = cn; allVisits = v
-      renderAll(b?.[0] || null)
+      renderAll(wn?.[0] || null)
       updateConnectionBadge(true)
     } catch(e) {
       updateConnectionBadge(false)
@@ -752,11 +800,11 @@
   }
 
   // ── Render all ──
-  function renderAll(brief) {
+  function renderAll(weekNote) {
     renderStats()
     renderLadderPips()
+    renderSchedule(weekNote)
     renderSpaces()
-    renderBrief(brief)
     renderThreads()
     renderCycles()
     renderCareNotes()
@@ -889,78 +937,77 @@
     document.getElementById('spaces-container').innerHTML = html
   }
 
-  // ── Morning Brief ──
-  function renderBrief(brief) {
-    const el = document.getElementById('brief-container')
-    const today = sgtToday()
-    const label = new Date(today + 'T00:00:00').toLocaleDateString('en-SG', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+  // ── Week Schedule ──
+  const BASE_SCHEDULE = [
+    { day: 'Mon', shift: '8:45am – 5pm',   leave: '7:30am', tasks: '' },
+    { day: 'Tue', shift: '8am – 5pm',       leave: '6:45am', tasks: '' },
+    { day: 'Wed', shift: '8:45am – 5pm',   leave: '7:30am', tasks: '' },
+    { day: 'Thu', shift: '8am – 6:30pm',   leave: '6:45am', tasks: 'AM Motor Skills · Dismissal' },
+    { day: 'Fri', shift: '7am – 1pm',       leave: '5:45am', tasks: 'Health Screening' },
+  ]
 
-    const header = `
-      <div class="brief-header">
-        <div class="brief-header-left">
-          <span class="brief-title">Morning Brief</span>
-          <span class="brief-date">${label}</span>
-        </div>
-        <button class="brief-gen-btn" id="brief-gen-btn" onclick="copyBriefCmd(event)">Generate now</button>
+  function getWeekStart() {
+    const now = new Date(Date.now() + 8 * 60 * 60 * 1000)
+    const day = now.getUTCDay()
+    const diff = day === 0 ? -6 : 1 - day
+    const mon = new Date(now)
+    mon.setUTCDate(now.getUTCDate() + diff)
+    return mon.toISOString().split('T')[0]
+  }
+
+  function renderSchedule(weekNote) {
+    const todayDow = new Date(Date.now() + 8 * 60 * 60 * 1000).getUTCDay() // 0=Sun
+    const dowMap = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5 }
+
+    // Week range label
+    const weekStart = getWeekStart()
+    const monDate = new Date(weekStart + 'T00:00:00')
+    const friDate = new Date(monDate); friDate.setDate(monDate.getDate() + 4)
+    const fmtShort = d => d.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' })
+    document.getElementById('week-range').textContent =
+      `${fmtShort(monDate)} – ${fmtShort(friDate)}`
+
+    // Day cards
+    const cards = document.getElementById('day-cards')
+    cards.innerHTML = BASE_SCHEDULE.map(d => {
+      const isToday = dowMap[d.day] === todayDow
+      return `<div class="day-card${isToday ? ' today' : ''}">
+        <div class="day-name">${d.day}</div>
+        <div class="day-shift">${d.shift}</div>
+        <div class="day-leave">🏠 ${d.leave}</div>
+        ${d.tasks ? `<div class="day-tasks">${d.tasks}</div>` : ''}
       </div>`
+    }).join('')
 
-    if (!brief) {
-      el.innerHTML = `<div class="brief-panel">${header}
-        <div class="brief-empty-wrap">
-          <div class="brief-empty-icon">🌱</div>
-          <div class="brief-empty-title">No brief for today yet</div>
-          <div class="brief-empty-sub">It fires automatically at 6:45 am.<br>To generate it earlier — click <strong>Generate now</strong>, then paste the copied command into Claude.</div>
-        </div></div>`
-      return
+    // Populate saved notes
+    if (weekNote) {
+      const ov = document.getElementById('wn-overrides')
+      const mt = document.getElementById('wn-meetings')
+      if (ov) ov.value = weekNote.overrides || ''
+      if (mt) mt.value = weekNote.meetings || ''
     }
+  }
 
-    const content = brief.content || ''
-    const sections = content.split(/^## /m).filter(Boolean)
-    const parts = []
+  async function saveWeekNotes() {
+    const overrides = document.getElementById('wn-overrides')?.value.trim() || null
+    const meetings  = document.getElementById('wn-meetings')?.value.trim() || null
+    const btn = document.getElementById('wn-save-btn')
+    const msg = document.getElementById('wn-msg')
+    btn.disabled = true; btn.textContent = 'Saving…'; msg.textContent = ''
 
-    sections.forEach(s => {
-      const lines = s.trim().split('\n')
-      const title = lines[0].replace(/^#+\s*/, '').trim()
-      const body  = lines.slice(1).join('\n').trim()
-      if (!body || title.toLowerCase().startsWith('morning brief')) return
+    const weekStart = getWeekStart()
+    const { error } = await client.from('week_notes')
+      .upsert({ week_start: weekStart, overrides, meetings }, { onConflict: 'week_start' })
 
-      let inner
-      const t = title.toLowerCase()
-
-      if (t.includes('spark') || t.includes('provocation')) {
-        inner = `<div class="brief-spark-box">${body}</div>
-                 <div class="brief-source">↳ Drawn from your most recent discussion log</div>`
-
-      } else if (t.includes('thread')) {
-        const rows = body.split('\n').filter(l => l.trim().startsWith('-'))
-        inner = rows.length
-          ? `<div class="brief-thread-list">${rows.map(l => `<div class="brief-thread-row"><div class="brief-dot green"></div><div class="brief-thread-text">${l.replace(/^-\s*/,'')}</div></div>`).join('')}</div>`
-          : `<div class="brief-generic">${body}</div>`
-
-      } else if (t.includes('investigation')) {
-        const rows = body.split('\n').filter(l => l.trim().startsWith('-'))
-        inner = rows.length
-          ? `<div class="brief-thread-list">${rows.map(l => `<div class="brief-thread-row"><div class="brief-dot gold"></div><div class="brief-thread-text">${l.replace(/^-\s*/,'')}</div></div>`).join('')}</div>`
-          : `<div class="brief-generic">${body}</div>`
-
-      } else if (t.includes('nest')) {
-        inner = `<div class="brief-nest-box">${body}</div>`
-
-      } else if (t.includes('schedule')) {
-        inner = `<div class="brief-sched">${body}</div>`
-
-      } else {
-        inner = `<div class="brief-generic">${body}</div>`
-      }
-
-      parts.push(`<div class="brief-section"><div class="brief-section-title">${title}</div>${inner}</div>`)
-    })
-
-    const body = parts.length
-      ? parts.join('<div class="brief-divider"></div>')
-      : `<div class="brief-generic" style="white-space:pre-wrap;">${content}</div>`
-
-    el.innerHTML = `<div class="brief-panel">${header}<div class="brief-body">${body}</div></div>`
+    btn.disabled = false; btn.textContent = 'Save'
+    if (error) {
+      msg.style.color = '#c0392b'
+      msg.textContent = 'Save failed: ' + error.message
+    } else {
+      msg.style.color = 'var(--accent)'
+      msg.textContent = 'Saved ✓'
+      setTimeout(() => { msg.textContent = '' }, 2500)
+    }
   }
 
   // ── Threads ──
