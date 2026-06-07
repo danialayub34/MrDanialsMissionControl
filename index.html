@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mission Control — Pebble Place</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #fef8f0; --warm-white: #fdf4e8; --ink: #2d2010; --ink-light: #6a5030;
+      --ink-faint: #b09060; --accent: #5a7a4a; --accent-mid: #4a6a3a; --accent-light: #e8f0e4;
+      --gold: #d4a050; --gold-light: #fdf0d8; --border: #f0e4cc; --card: #ffffff;
+      --sidebar-w: 270px; --transition: 0.18s ease;
+    }
+    html, body { height: 100%; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--cream); color: var(--ink); display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* Header */
+    .app-header { background: var(--card); border-bottom: 1px solid var(--border); padding: 0.9rem 1.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .header-brand { display: flex; align-items: baseline; gap: 0.75rem; }
+    .header-brand h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.35rem; font-weight: 400; letter-spacing: -0.01em; }
+    .header-brand .divider { color: var(--border); }
+    .header-brand .school { font-size: 0.8rem; color: var(--ink-light); font-weight: 300; }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .big-idea-chip { font-family: 'DM Serif Display', Georgia, serif; font-style: italic; font-size: 0.88rem; color: var(--accent); background: var(--accent-light); padding: 0.28rem 0.75rem; border-radius: 999px; }
+    .live-badge { font-size: 0.68rem; color: var(--accent-mid); display: flex; align-items: center; gap: 0.3rem; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4caf50; box-shadow: 0 0 0 2px rgba(76,175,80,0.2); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 2px rgba(76,175,80,0.2)} 50%{box-shadow:0 0 0 4px rgba(76,175,80,0.1)} }
+    .error-badge { font-size: 0.68rem; color: #c0392b; display: flex; align-items: center; gap: 0.3rem; }
+
+    /* Layout */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: var(--card); border-right: 1px solid var(--border); overflow-y: auto; padding: 1.4rem 1.1rem; display: flex; flex-direction: column; gap: 1.6rem; }
+    .sidebar-label { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); margin-bottom: 0.7rem; }
+    .ladder { display: flex; flex-direction: column; gap: 0.35rem; }
+    .rung-btn { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.7rem; border-radius: 9px; border: 1px solid transparent; background: transparent; cursor: pointer; text-align: left; width: 100%; transition: all var(--transition); color: var(--ink); font-family: inherit; }
+    .rung-btn:hover { background: var(--cream); border-color: var(--border); }
+    .rung-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .rung-btn.all-btn { font-size: 0.72rem; color: var(--ink-faint); padding: 0.38rem 0.7rem; justify-content: center; margin-bottom: 0.15rem; }
+    .rung-btn.all-btn.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .rung-n { font-family: 'DM Serif Display', Georgia, serif; font-size: 0.95rem; color: var(--ink-faint); min-width: 0.85rem; margin-top: 0.1rem; flex-shrink: 0; }
+    .rung-btn.active .rung-n { color: rgba(255,255,255,0.45); }
+    .rung-text { font-size: 0.74rem; line-height: 1.4; }
+    .rung-pip { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-mid); margin-top: 0.4rem; flex-shrink: 0; display: none; }
+    .rung-btn.has-activity .rung-pip { display: block; }
+    .rung-btn.active .rung-pip { background: rgba(255,255,255,0.55); }
+    .lens-note { font-size: 0.67rem; color: var(--ink-faint); font-style: italic; margin-top: 0.35rem; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+    .stat-card { background: var(--cream); border-radius: 8px; padding: 0.6rem 0.7rem; border: 1px solid var(--border); }
+    .stat-num { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.5rem; line-height: 1; }
+    .stat-label { font-size: 0.63rem; color: var(--ink-faint); margin-top: 0.15rem; line-height: 1.3; }
+    .sched-row { display: flex; justify-content: space-between; padding: 0.48rem 0; border-bottom: 1px solid var(--border); font-size: 0.74rem; }
+    .sched-row:last-child { border-bottom: none; }
+    .sched-time { font-weight: 500; }
+    .sched-days { font-size: 0.65rem; color: var(--ink-faint); }
+    .sched-dest { font-size: 0.65rem; color: var(--ink-faint); }
+
+    /* Main */
+    .main { flex: 1; overflow-y: auto; padding: 1.4rem; display: flex; flex-direction: column; gap: 1.1rem; }
+    .tab-bar { display: flex; gap: 0.2rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.28rem; width: fit-content; flex-wrap: wrap; }
+    .tab-btn { font-family: inherit; font-size: 0.76rem; padding: 0.42rem 0.9rem; border-radius: 7px; border: none; background: transparent; color: var(--ink-light); cursor: pointer; transition: all var(--transition); white-space: nowrap; }
+    .tab-btn:hover { color: var(--ink); background: var(--cream); }
+    .tab-btn.active { background: var(--ink); color: #fff; font-weight: 500; }
+    .tab-count { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; font-size: 0.58rem; background: rgba(255,255,255,0.2); margin-left: 0.3rem; font-weight: 600; }
+    .tab-btn:not(.active) .tab-count { background: var(--border); color: var(--ink-faint); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .filter-info { font-size: 0.72rem; color: var(--ink-faint); display: none; }
+    .filter-info.visible { display: block; }
+
+    /* Cards */
+    .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; transition: box-shadow var(--transition); }
+    .card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .card + .card { margin-top: 0.6rem; }
+    .card-header { display: flex; align-items: flex-start; gap: 0.7rem; padding: 1rem 1.2rem; cursor: pointer; }
+    .card-header:hover { background: #fafaf8; }
+    .card-meta { flex: 1; }
+    .card-title-row { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+    .card-name { font-size: 0.88rem; font-weight: 500; }
+    .card-summary { font-size: 0.76rem; color: var(--ink-light); line-height: 1.4; }
+    .card-toggle { font-size: 0.68rem; color: var(--ink-faint); flex-shrink: 0; transition: transform var(--transition); }
+    .card.open .card-toggle { transform: rotate(180deg); }
+    .card-body { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; border-top: 0px solid var(--border); }
+    .card.open .card-body { max-height: 1600px; border-top-width: 1px; }
+    /* ── Thread / Cycle image ── */
+    .thread-upload-zone { display: flex; align-items: center; justify-content: center; gap: 0.4rem; border: 1.5px dashed var(--border); border-radius: 8px; padding: 0.65rem 1rem; cursor: pointer; background: var(--cream); transition: all var(--transition); font-size: 0.75rem; color: var(--ink-faint); width: 100%; text-align: center; }
+    .thread-upload-zone:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+    .thread-img-wrap { border-radius: 8px; overflow: hidden; background: var(--cream); border: 1px solid var(--border); }
+    .thread-img-wrap img { width: 100%; display: block; object-fit: contain; max-height: 260px; cursor: zoom-in; transition: max-height 0.3s ease; }
+    .thread-img-wrap img.zoomed { max-height: none; cursor: zoom-out; }
+    .thread-img-replace { display: block; text-align: center; font-size: 0.65rem; color: var(--ink-faint); cursor: pointer; padding: 0.28rem; background: var(--warm-white); border-top: 1px solid var(--border); transition: color var(--transition); }
+    .thread-img-replace:hover { color: var(--ink); }
+    /* ── Current understanding inline edit ── */
+    .cu-edit-area { width: 100%; font-family: inherit; font-size: 0.78rem; padding: 0.5rem 0.65rem; border: 1px solid var(--border); border-radius: 8px; background: var(--warm-white); color: var(--ink); resize: vertical; min-height: 62px; outline: none; line-height: 1.5; }
+    .cu-edit-area:focus { border-color: var(--accent); }
+    .cu-save-row { display: flex; gap: 0.45rem; margin-top: 0.38rem; }
+    .cu-save-btn { font-family: inherit; font-size: 0.72rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 0.3rem 0.8rem; cursor: pointer; transition: background var(--transition); }
+    .cu-save-btn:hover { background: var(--accent-mid); }
+    .cu-save-btn:disabled { background: var(--border); color: var(--ink-faint); cursor: not-allowed; }
+    .cu-cancel-btn { font-family: inherit; font-size: 0.72rem; background: none; color: var(--ink-faint); border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.8rem; cursor: pointer; }
+    .cu-edit-link { font-size: 0.62rem; color: var(--ink-faint); cursor: pointer; margin-left: 0.35rem; text-decoration: underline; text-transform: none; letter-spacing: 0; font-weight: 400; }
+    .cu-edit-link:hover { color: var(--ink); }
+    .card-body-inner { padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; }
+    .detail-row { display: flex; flex-direction: column; gap: 0.18rem; }
+    .detail-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); font-weight: 500; }
+    .detail-val { font-size: 0.78rem; color: var(--ink-light); line-height: 1.5; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 0.28rem; margin-top: 0.1rem; }
+    .tag { font-size: 0.67rem; padding: 0.13rem 0.5rem; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-light); background: var(--cream); }
+    .ext-box { background: var(--accent-light); border-radius: 8px; padding: 0.7rem 0.85rem; border-left: 3px solid var(--accent); }
+    .ext-box .detail-label { color: var(--accent); }
+    .ext-box .detail-val { color: var(--accent); font-style: italic; }
+    .badge { display: inline-flex; align-items: center; font-size: 0.61rem; font-weight: 500; padding: 0.13rem 0.5rem; border-radius: 999px; letter-spacing: 0.03em; white-space: nowrap; }
+    .badge-rung { background: var(--ink); color: #fff; }
+    .badge-active { background: var(--accent-light); color: var(--accent); }
+    .badge-week { background: var(--gold-light); color: var(--gold); }
+    /* ── PP Goal CSPE badges ── */
+    .badge-c { background: #daeef7; color: #3a6e8a; border: 1px solid #b8d9ea; }
+    .badge-s { background: #d8f0e2; color: #3a6e52; border: 1px solid #b4dfc6; }
+    .badge-p { background: #fce8dc; color: #9a5430; border: 1px solid #f0c8ae; }
+    .badge-e { background: #ecdff5; color: #6e4a8a; border: 1px solid #d4bce8; }
+    /* ── Goals overlay ── */
+    .goals-overlay { display: none; position: fixed; inset: 0; z-index: 200; align-items: center; justify-content: center; }
+    .goals-overlay.open { display: flex; }
+    .goals-backdrop { position: absolute; inset: 0; background: rgba(45,32,16,0.38); }
+    .goals-panel { position: relative; width: min(840px, 94vw); max-height: 88vh; background: var(--card); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+    .goals-header { padding: 0.9rem 1.4rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--warm-white); flex-shrink: 0; }
+    .goals-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.05rem; font-weight: 400; }
+    .goals-close { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--ink-faint); padding: 0.2rem 0.5rem; border-radius: 5px; line-height: 1; }
+    .goals-close:hover { background: var(--border); color: var(--ink); }
+    .goals-body { overflow-y: auto; padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: 1.6rem; }
+    .goals-domain-block { display: flex; flex-direction: column; gap: 0.5rem; }
+    .goals-domain-hd { font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); padding-bottom: 0.4rem; border-bottom: 1.5px solid var(--border); margin-bottom: 0.2rem; }
+    .goals-level-headers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.25rem; }
+    .goals-level-hd { font-size: 0.65rem; font-weight: 600; color: var(--ink-light); background: var(--cream); border-radius: 5px; padding: 0.2rem 0.6rem; display: block; }
+    .goals-cat-section { margin-bottom: 0.1rem; }
+    .goals-cat-hd-row { display: flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0 0.25rem; border-top: 1px solid var(--border); margin-top: 0.1rem; }
+    .goals-cat-hd-label { font-size: 0.59rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-faint); font-weight: 500; }
+    .goals-grid-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; padding-bottom: 0.3rem; }
+    .goals-grid-cell { display: flex; flex-direction: column; gap: 0; }
+    .goal-row { display: flex; align-items: baseline; gap: 0.4rem; padding: 0.16rem 0; }
+    .goal-code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.6rem; white-space: nowrap; flex-shrink: 0; padding: 0.09rem 0.32rem; border-radius: 4px; }
+    .goal-text { font-size: 0.7rem; color: var(--ink-light); line-height: 1.4; }
+    .empty-card { background: var(--card); border: 1px dashed var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; color: var(--ink-faint); font-size: 0.78rem; font-style: italic; }
+
+    /* Spaces */
+    .spaces-group-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); font-weight: 500; margin-bottom: 0.45rem; }
+    .spaces-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+    .space-tile { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem; cursor: pointer; transition: all var(--transition); }
+    .space-tile:hover { border-color: var(--ink-faint); }
+    .space-tile.live-t { border-color: var(--accent); background: var(--accent-light); }
+    .space-tile.live-c { border-color: var(--gold); background: var(--gold-light); }
+    .tile-type { font-size: 0.57rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 0.25rem; }
+    .space-tile.live-t .tile-type { color: var(--accent); }
+    .space-tile.live-c .tile-type { color: var(--gold); }
+    .tile-name { font-size: 0.76rem; font-weight: 500; line-height: 1.3; }
+    .tile-hint { font-size: 0.65rem; color: var(--ink-faint); margin-top: 0.22rem; line-height: 1.3; }
+    .space-tile.live-t .tile-hint { color: var(--accent-mid); }
+    .space-tile.live-c .tile-hint { color: var(--gold); }
+
+    /* Brief */
+    .brief-panel { background: var(--card); border-radius: 12px; border: 1.5px solid var(--border); overflow: hidden; }
+    .brief-header { padding: 0.9rem 1.2rem; border-bottom: 1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--warm-white); }
+    .brief-header-left { display: flex; flex-direction: column; gap: 0.15rem; }
+    .brief-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.1rem; font-weight: 400; color: var(--ink); }
+    .brief-date { font-size: 0.7rem; color: var(--ink-faint); }
+    .brief-gen-btn { font-family: inherit; font-size: 0.72rem; background: var(--accent); color: #fff; border: none; border-radius: 7px; padding: 0.38rem 0.8rem; cursor: pointer; transition: background var(--transition); white-space: nowrap; }
+    .brief-gen-btn:hover { background: var(--accent-mid); }
+    .brief-gen-btn.copied { background: var(--gold); }
+    .brief-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 1rem; }
+    .brief-section { display: flex; flex-direction: column; gap: 0.4rem; }
+    .brief-section-title { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); font-weight: 600; }
+    .brief-divider { height: 1px; background: var(--border); }
+    .brief-spark-box { background: var(--accent-light); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; font-style: italic; font-size: 0.85rem; color: var(--accent-mid); line-height: 1.6; }
+    .brief-source { font-size: 0.68rem; color: var(--ink-faint); margin-top: 2px; }
+    .brief-thread-list { display: flex; flex-direction: column; }
+    .brief-thread-row { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+    .brief-thread-row:last-child { border-bottom: none; }
+    .brief-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .brief-dot.green { background: #4caf50; }
+    .brief-dot.gold { background: var(--gold); }
+    .brief-thread-text { font-size: 0.8rem; color: var(--ink-light); line-height: 1.45; }
+    .brief-nest-box { background: var(--warm-white); border-radius: 8px; border: 1px solid var(--border); padding: 0.75rem 1rem; font-size: 0.82rem; color: var(--ink-light); line-height: 1.6; }
+    .brief-sched { font-size: 0.75rem; color: var(--ink-faint); font-style: italic; line-height: 1.5; }
+    .brief-generic { font-size: 0.82rem; color: var(--ink-light); line-height: 1.6; }
+    .brief-empty-wrap { padding: 2.5rem 1.5rem; text-align: center; }
+    .brief-empty-icon { font-size: 1.75rem; margin-bottom: 0.65rem; }
+    .brief-empty-title { font-family: 'DM Serif Display', Georgia, serif; font-style: italic; font-size: 1rem; color: var(--ink); margin-bottom: 0.4rem; }
+    .brief-empty-sub { font-size: 0.78rem; color: var(--ink-faint); line-height: 1.6; }
+    .brief-cmd { font-family: 'SF Mono', 'Fira Code', monospace; background: var(--cream); border: 1px solid var(--border); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.7rem; color: var(--ink); }
+
+    /* Care notes — child grid */
+    .care-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+    .child-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem; cursor: pointer; transition: all var(--transition); }
+    .child-card:hover { border-color: var(--ink-faint); box-shadow: 0 2px 8px rgba(45,32,16,0.07); }
+    .child-card.has-notes { background: var(--accent-light); border-color: var(--accent); }
+    .child-code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.78rem; font-weight: 500; }
+    .child-age { font-size: 0.63rem; color: var(--ink-faint); margin-top: 0.15rem; }
+    .child-card.has-notes .child-age { color: var(--accent); }
+    .child-status { font-size: 0.63rem; color: var(--ink-faint); font-style: italic; margin-top: 0.2rem; }
+    .child-card.has-notes .child-status { font-style: normal; font-weight: 500; color: var(--accent); }
+    .care-legend { display: flex; gap: 1rem; font-size: 0.68rem; color: var(--ink-faint); margin-bottom: 0.75rem; align-items: center; }
+    .leg-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 0.25rem; }
+    /* Care notes — side drawer */
+    .care-overlay { display: none; position: fixed; inset: 0; z-index: 200; }
+    .care-overlay.open { display: flex; align-items: stretch; justify-content: flex-end; }
+    .care-backdrop { position: fixed; inset: 0; background: rgba(45,32,16,0.28); z-index: 0; }
+    .care-panel { position: relative; z-index: 1; width: min(680px, 100vw); height: 100vh; background: var(--warm-white); display: flex; flex-direction: column; box-shadow: -4px 0 28px rgba(45,32,16,0.13); overflow: hidden; }
+    .care-panel-hd { padding: 1rem 1.25rem 0.9rem; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; gap: 0.75rem; background: var(--warm-white); }
+    .care-panel-name { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--ink); }
+    .care-panel-age { font-size: 0.7rem; color: var(--ink-faint); margin-top: 0.12rem; }
+    .care-panel-close { margin-left: auto; background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--ink-faint); padding: 0.2rem 0.4rem; line-height: 1; border-radius: 4px; }
+    .care-panel-close:hover { color: var(--ink); background: var(--cream); }
+    .care-panel-body { flex: 1; overflow-y: auto; padding: 1rem 1.25rem 2rem; }
+    /* Drawer — add buttons */
+    .care-add-btn { font-family: inherit; font-size: 0.73rem; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--ink-faint); padding: 0.32rem 0.8rem; cursor: pointer; margin-bottom: 0.45rem; margin-right: 0.4rem; transition: all var(--transition); }
+    .care-add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    /* Drawer — log forms */
+    .care-log-form { background: var(--cream); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem 0.9rem; margin-bottom: 0.9rem; display: none; }
+    .care-log-form.open { display: block; }
+    .care-log-form-title { font-size: 0.72rem; font-weight: 600; color: var(--ink-light); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.65rem; }
+    .care-form-row { display: flex; gap: 0.45rem; margin-bottom: 0.45rem; flex-wrap: wrap; }
+    .care-form-field { display: flex; flex-direction: column; gap: 0.18rem; flex: 1; min-width: 130px; }
+    .care-form-field.full { flex: 0 0 100%; min-width: 0; margin-bottom: 0.45rem; }
+    .care-form-label { font-size: 0.65rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+    .care-form-input { font-family: inherit; font-size: 0.78rem; padding: 0.34rem 0.55rem; border: 1px solid var(--border); border-radius: 7px; background: var(--warm-white); color: var(--ink); outline: none; width: 100%; box-sizing: border-box; }
+    .care-form-input:focus { border-color: var(--accent); }
+    .care-form-textarea { font-family: inherit; font-size: 0.78rem; padding: 0.38rem 0.55rem; border: 1px solid var(--border); border-radius: 7px; background: var(--warm-white); color: var(--ink); outline: none; resize: vertical; min-height: 64px; width: 100%; box-sizing: border-box; line-height: 1.5; }
+    .care-form-textarea:focus { border-color: var(--accent); }
+    .care-form-save { font-family: inherit; font-size: 0.75rem; background: var(--accent); color: #fff; border: none; border-radius: 7px; padding: 0.36rem 1rem; cursor: pointer; margin-top: 0.5rem; transition: background var(--transition); }
+    .care-form-save:hover { background: var(--accent-mid); }
+    .care-form-save:disabled { background: var(--border); color: var(--ink-faint); cursor: not-allowed; }
+    .care-form-msg { font-size: 0.7rem; margin-top: 0.35rem; min-height: 1em; }
+    /* Drawer — timeline */
+    .care-section-hd { font-size: 0.7rem; font-weight: 600; color: var(--ink-light); letter-spacing: 0.05em; text-transform: uppercase; margin: 1.1rem 0 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+    .care-section-hd::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .care-entry { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; }
+    .care-entry-hd { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+    .care-entry-date { font-size: 0.68rem; color: var(--ink-faint); }
+    .care-entry-badge { font-size: 0.65rem; border-radius: 8px; padding: 0.07rem 0.4rem; border: 1px solid; }
+    .care-entry-badge.obs { background: var(--cream); border-color: var(--border); color: var(--ink-light); }
+    .care-entry-badge.parent { background: #ecdff5; border-color: #d4bce8; color: #6e4a8a; }
+    .care-entry-body { font-size: 0.78rem; color: var(--ink); line-height: 1.56; }
+    .care-entry-sub { font-size: 0.71rem; color: var(--ink-light); margin-top: 0.28rem; line-height: 1.45; }
+    .care-entry-sub strong { color: var(--ink-faint); font-weight: 600; }
+    .care-empty { font-size: 0.77rem; color: var(--ink-faint); font-style: italic; padding: 0.4rem 0 0.2rem; }
+
+    /* Skills */
+    .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+    .skill-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; cursor: pointer; transition: all var(--transition); }
+    .skill-card:hover { border-color: var(--ink-faint); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .skill-card.copied { border-color: var(--accent); background: var(--accent-light); }
+    .skill-cmd { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.73rem; font-weight: 500; margin-bottom: 0.3rem; }
+    .skill-desc { font-size: 0.73rem; color: var(--ink-faint); line-height: 1.4; }
+    .skill-hint { font-size: 0.63rem; color: var(--ink-faint); font-style: italic; margin-top: 0.3rem; }
+    .skill-card.copied .skill-hint { color: var(--accent); font-style: normal; font-weight: 500; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 2rem; color: var(--ink-faint); font-size: 0.8rem; font-style: italic; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* ── Hamburger + mobile sidebar ── */
+    .hamburger { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 7px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; transition: background var(--transition); }
+    .hamburger:hover { background: var(--cream); }
+    .hamburger span { display: block; width: 20px; height: 2px; background: var(--ink); border-radius: 2px; transition: all 0.22s ease; }
+    .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 49; }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Mobile sidebar close row ── */
+    .sidebar-close-row { display: none; }
+    @media (max-width: 700px) {
+      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 150; transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: 4px 0 20px rgba(0,0,0,0.12); }
+      .sidebar.mobile-open { transform: translateX(0); }
+      .sidebar-overlay { z-index: 148; }
+      .sidebar-close-row { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.1rem 0.8rem; border-bottom: 1px solid var(--border); margin: -1.4rem -1.1rem 1rem; background: var(--warm-white); flex-shrink: 0; }
+      .sidebar-close-label { font-family: 'DM Serif Display', Georgia, serif; font-size: 1rem; font-weight: 400; color: var(--ink); }
+      .sidebar-close-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--ink-faint); padding: 0.2rem 0.5rem; border-radius: 5px; line-height: 1; }
+      .app-body { overflow: hidden; }
+      .main { padding: 1rem; }
+      .tab-btn { font-size: 0.7rem; padding: 0.38rem 0.7rem; }
+    }
+    @media (min-width: 701px) {
+      .hamburger { display: none; }
+    }
+
+    /* ── Term Pulse + Growing Edges ── */
+    .pulse-card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); padding: 0.75rem 0.85rem; }
+    .pulse-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+    .pulse-week { font-family: 'DM Serif Display', Georgia, serif; font-style: italic; font-size: 1.4rem; color: var(--ink); line-height: 1; }
+    .pulse-meta { font-size: 0.63rem; color: var(--ink-faint); margin-top: 1px; }
+    .pulse-right { text-align: right; }
+    .pulse-days { font-family: 'DM Serif Display', Georgia, serif; font-style: italic; font-size: 1.05rem; color: var(--accent); }
+    .pulse-sub { font-size: 0.68rem; color: var(--ink-light); margin-bottom: 6px; }
+    .pulse-bar-wrap { background: var(--border); border-radius: 999px; height: 4px; overflow: hidden; }
+    .pulse-bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.5s ease; }
+    .pulse-bar-labels { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--ink-faint); margin-top: 3px; }
+    .edges-card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+    .edge-row { display: flex; align-items: flex-start; gap: 7px; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+    .edge-row:last-child { border-bottom: none; }
+    .edge-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; margin-top: 5px; }
+    .edge-text { font-size: 0.72rem; color: var(--ink-light); line-height: 1.45; }
+    .edge-text strong { color: var(--ink); font-weight: 500; }
+
+    /* ── Spark gallery ── */
+    .spark-card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: box-shadow var(--transition), border-color var(--transition); }
+    .spark-card:hover { box-shadow: 0 2px 10px rgba(45,32,16,0.09); }
+    .spark-card.open { border-color: var(--accent); }
+    .spark-img-wrap { width: 100%; aspect-ratio: 4/3; overflow: hidden; border-bottom: 1px solid var(--border); background: var(--cream); display: flex; align-items: center; justify-content: center; }
+    .spark-img-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .spark-no-img { font-size: 1.8rem; opacity: 0.25; }
+    .spark-card-body { padding: 0.65rem 0.75rem; }
+    .spark-prov { font-size: 0.73rem; color: var(--ink-light); line-height: 1.4; font-style: italic; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .spark-card.open .spark-prov { -webkit-line-clamp: unset; }
+    .spark-notes-text { font-size: 0.68rem; color: var(--ink-faint); line-height: 1.45; margin-top: 0.35rem; display: none; border-top: 1px solid var(--border); padding-top: 0.35rem; }
+    .spark-card.open .spark-notes-text { display: block; }
+    /* Spark archive — filter bar */
+    .spark-filter-bar { display: flex; gap: 0.45rem; margin-bottom: 0.85rem; align-items: center; flex-wrap: wrap; }
+    .spark-filter-input { flex: 1; min-width: 140px; font-family: inherit; font-size: 0.78rem; padding: 0.38rem 0.65rem; border: 1px solid var(--border); border-radius: 8px; background: var(--warm-white); color: var(--ink); outline: none; }
+    .spark-filter-input:focus { border-color: var(--accent); }
+    .spark-filter-select { font-family: inherit; font-size: 0.75rem; padding: 0.38rem 0.5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--warm-white); color: var(--ink); outline: none; cursor: pointer; }
+    .spark-filter-clear { font-family: inherit; font-size: 0.72rem; color: var(--ink-faint); background: none; border: none; cursor: pointer; padding: 0.2rem 0.35rem; }
+    .spark-filter-clear:hover { color: var(--ink); }
+    /* Spark archive — month groups */
+    .spark-month-group { margin-bottom: 1.1rem; }
+    .spark-month-hd { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.38rem 0; user-select: none; margin-bottom: 0.55rem; border-bottom: 1px solid var(--border); }
+    .spark-month-label { font-size: 0.78rem; font-weight: 600; color: var(--ink-light); letter-spacing: 0.02em; }
+    .spark-month-count { font-size: 0.67rem; color: var(--ink-faint); background: var(--cream); border: 1px solid var(--border); border-radius: 10px; padding: 0.08rem 0.42rem; }
+    .spark-month-chevron { font-size: 0.58rem; color: var(--ink-faint); transition: transform 0.2s ease; margin-left: auto; }
+    .spark-month-group.collapsed .spark-month-chevron { transform: rotate(-90deg); }
+    .spark-month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
+    .spark-month-group.collapsed .spark-month-grid { display: none; }
+    .spark-no-results { color: var(--ink-faint); font-size: 0.8rem; padding: 1.5rem; text-align: center; }
+    .badge-date { background: var(--cream); color: var(--ink-faint); border: 1px solid var(--border); }
+    .badge-space { background: var(--accent-light); color: var(--accent); }
+    .upload-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1.5px dashed var(--border); border-radius: 8px; padding: 0.85rem; text-align: center; cursor: pointer; background: var(--cream); transition: all var(--transition); }
+    .upload-zone:hover { border-color: var(--accent); background: var(--accent-light); }
+    .upload-icon { font-size: 1.2rem; margin-bottom: 0.2rem; }
+    .upload-text { font-size: 0.7rem; color: var(--ink-faint); }
+
+    /* ── Space Tracker ── */
+    .log-form-card { background: var(--card); border-radius: 12px; border: 1px solid var(--accent); padding: 1.25rem; margin-bottom: 1.1rem; }
+    .log-form-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 1rem; font-weight: 400; margin-bottom: 1rem; color: var(--ink); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .form-field { display: flex; flex-direction: column; gap: 0.28rem; }
+    .form-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); font-weight: 500; }
+    .form-select, .form-input, .form-textarea { font-family: inherit; font-size: 0.82rem; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--warm-white); color: var(--ink); outline: none; width: 100%; appearance: none; }
+    .form-select:focus, .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+    .form-textarea { resize: vertical; min-height: 65px; }
+    .form-full { grid-column: 1 / -1; }
+    .save-btn { grid-column: 1 / -1; background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 0.72rem 1.25rem; font-family: inherit; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background var(--transition); margin-top: 0.1rem; }
+    .save-btn:hover { background: var(--accent-mid); }
+    .save-btn:disabled { background: var(--border); color: var(--ink-faint); cursor: not-allowed; }
+    .save-msg { font-size: 0.73rem; color: var(--accent); font-style: italic; text-align: center; min-height: 1.2rem; margin-top: 0.3rem; }
+    .coverage-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .coverage-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); font-weight: 600; }
+    .coverage-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1.2rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background var(--transition); }
+    .coverage-row:last-child { border-bottom: none; }
+    .coverage-row:hover { background: var(--cream); }
+    .coverage-space-name { font-size: 0.8rem; font-weight: 500; min-width: 145px; }
+    .coverage-bar-wrap { flex: 1; background: var(--cream); border-radius: 999px; height: 5px; overflow: hidden; }
+    .coverage-bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.5s ease; min-width: 2px; }
+    .coverage-count { font-size: 0.7rem; color: var(--ink-faint); min-width: 30px; text-align: right; }
+    .coverage-chevron { font-size: 0.62rem; color: var(--ink-faint); transition: transform var(--transition); flex-shrink: 0; }
+    .breakdown-panel { display: none; padding: 0.75rem 1.2rem 1rem; background: var(--cream); border-bottom: 1px solid var(--border); }
+    .breakdown-panel.open { display: block; }
+    .breakdown-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.35rem; }
+    .cvt { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 0.45rem 0.3rem; text-align: center; }
+    .cvt.zero { border-color: #e8a0a0; background: #fff5f5; }
+    .cvt.low { border-color: var(--gold); background: var(--gold-light); }
+    .cvt.good { border-color: var(--accent); background: var(--accent-light); }
+    .cvt-code { font-family: 'SF Mono', monospace; font-size: 0.6rem; font-weight: 500; display: block; }
+    .cvt-num { font-size: 0.62rem; color: var(--ink-faint); margin-top: 0.1rem; display: block; }
+    .cvt.zero .cvt-num { color: #c0392b; font-weight: 600; }
+    .cvt.low .cvt-num { color: var(--gold); font-weight: 600; }
+    .cvt.good .cvt-num { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<header class="app-header">
+  <div style="display:flex; align-items:center; gap:0.75rem;">
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="header-brand">
+      <h1>Mission Control</h1>
+      <span class="divider">|</span>
+      <span class="school">Pebble Place &nbsp;·&nbsp; Danial Ayub &nbsp;·&nbsp; SGT (UTC+8)</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="big-idea-chip">Sustainability</span>
+    <span class="live-badge" id="conn-badge"><span class="live-dot"></span>Live</span>
+  </div>
+</header>
+
+<div class="app-body">
+  <aside class="sidebar">
+    <div class="sidebar-close-row">
+      <span class="sidebar-close-label">Mission Control</span>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close menu">✕</button>
+    </div>
+    <div>
+      <div class="sidebar-label">Conceptual Ladder — Term 3</div>
+      <div class="ladder">
+        <button class="rung-btn all-btn active" onclick="filterRung(0,this)">Show all</button>
+        <button class="rung-btn" id="rung-1" onclick="filterRung(1,this)">
+          <span class="rung-n">1</span><span class="rung-text">How do we care for ourselves and each other?</span><span class="rung-pip"></span>
+        </button>
+        <button class="rung-btn" id="rung-2" onclick="filterRung(2,this)">
+          <span class="rung-n">2</span><span class="rung-text">How do we care for our materials and spaces?</span><span class="rung-pip"></span>
+        </button>
+        <button class="rung-btn" id="rung-3" onclick="filterRung(3,this)">
+          <span class="rung-n">3</span><span class="rung-text">How do we care for the world around us?</span><span class="rung-pip"></span>
+        </button>
+        <button class="rung-btn" id="rung-4" onclick="filterRung(4,this)">
+          <span class="rung-n">4</span><span class="rung-text">What changes do I want to make to the world I live in?</span><span class="rung-pip"></span>
+        </button>
+      </div>
+      <div class="lens-note">⟡ Cross-cutting lens: <em>Choices</em> — at every rung</div>
+    </div>
+    <div>
+      <div class="sidebar-label">Term Pulse</div>
+      <div class="pulse-card" id="pulse-card"><div style="font-size:0.75rem;color:var(--ink-faint);font-style:italic;">Loading…</div></div>
+    </div>
+    <div>
+      <div class="sidebar-label">Growing Edges</div>
+      <div class="edges-card" id="edges-card"><div class="edge-row"><div class="edge-dot"></div><div class="edge-text">Loading…</div></div></div>
+    </div>
+    <div>
+      <div class="sidebar-label">Automated Schedule</div>
+      <div class="sched-row"><div><div class="sched-time">6:45 am</div><div class="sched-days">Mon – Fri</div></div><div class="sched-dest">Morning brief</div></div>
+      <div class="sched-row"><div><div class="sched-time">8:00 am</div><div class="sched-days">Saturday</div></div><div class="sched-dest">ECE reading</div></div>
+    </div>
+    <div>
+      <button class="rung-btn all-btn" onclick="openGoalsPanel()" style="font-size:0.72rem;color:var(--ink-light);justify-content:flex-start;gap:0.5rem;width:100%;text-align:left;">
+        📋 PP Developmental Goals
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+        <button class="tab-btn" onclick="switchTab('brief',this)">Morning Brief</button>
+        <button class="tab-btn" onclick="switchTab('spark',this)">Spark <span class="tab-count" id="tc-sparks">–</span></button>
+        <button class="tab-btn" onclick="switchTab('threads',this)">Inquiry Threads <span class="tab-count" id="tc-threads">–</span></button>
+        <button class="tab-btn" onclick="switchTab('investigations',this)">Investigations <span class="tab-count" id="tc-cycles">–</span></button>
+        <button class="tab-btn" onclick="switchTab('carenotes',this)">Care Notes <span class="tab-count" id="tc-care">–</span></button>
+        <button class="tab-btn" onclick="switchTab('tracker',this)">Space Tracker</button>
+        <button class="tab-btn" onclick="switchTab('skills',this)">Skills</button>
+      </div>
+      <span class="filter-info" id="filter-info"></span>
+    </div>
+
+    <!-- Overview -->
+    <div class="tab-panel active" id="panel-overview">
+      <div id="spaces-container"><div class="loading"><span class="spinner"></span>Loading spaces…</div></div>
+    </div>
+
+    <!-- Morning Brief -->
+    <div class="tab-panel" id="panel-brief">
+      <div id="brief-container"><div class="loading"><span class="spinner"></span>Loading brief…</div></div>
+    </div>
+
+    <!-- Threads -->
+    <div class="tab-panel" id="panel-threads">
+      <div id="threads-container"><div class="loading"><span class="spinner"></span>Loading threads…</div></div>
+    </div>
+
+    <!-- Investigations -->
+    <div class="tab-panel" id="panel-investigations">
+      <div id="cycles-container"><div class="loading"><span class="spinner"></span>Loading investigations…</div></div>
+    </div>
+
+    <!-- Care Notes -->
+    <div class="tab-panel" id="panel-carenotes">
+      <div class="care-legend">
+        <span><span class="leg-dot" style="background:var(--border)"></span>No notes</span>
+        <span><span class="leg-dot" style="background:var(--accent)"></span>Has notes</span>
+        <span style="margin-left:auto; font-size:0.67rem;">Click any child to open their log</span>
+      </div>
+      <div class="care-grid" id="care-grid"><div class="loading"><span class="spinner"></span>Loading…</div></div>
+    </div>
+
+    <!-- Spark Sessions -->
+    <div class="tab-panel" id="panel-spark">
+
+      <div class="log-form-card">
+        <div class="log-form-title">Log a Spark session</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="spark-date"/>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Ladder rung</label>
+            <select class="form-select" id="spark-rung">
+              <option value="">Select rung…</option>
+              <option value="Rung 1">Rung 1 — Care for each other</option>
+              <option value="Rung 2">Rung 2 — Care for spaces</option>
+              <option value="Rung 3">Rung 3 — Care for the world</option>
+              <option value="Rung 4">Rung 4 — Agency</option>
+              <option value="Other">Other / Cross-cutting</option>
+            </select>
+          </div>
+          <div class="form-field form-full">
+            <label class="form-label">Provocation</label>
+            <input class="form-input" type="text" id="spark-prov" placeholder="What question, artwork, or prompt did you use?"/>
+          </div>
+          <div class="form-field form-full">
+            <label class="form-label">Connected to <span style="text-transform:none;letter-spacing:0;font-weight:300;">(optional)</span></label>
+            <input class="form-input" type="text" id="spark-conn" placeholder="e.g. Games Table, Classroom agreements, General…"/>
+          </div>
+          <div class="form-field form-full">
+            <label class="form-label">Notes <span style="text-transform:none;letter-spacing:0;font-weight:300;">(optional)</span></label>
+            <input class="form-input" type="text" id="spark-notes-input" placeholder="Key ideas children shared, patterns, surprises…"/>
+          </div>
+          <div class="form-field form-full">
+            <label class="form-label">Mindmap photo <span style="text-transform:none;letter-spacing:0;font-weight:300;">(optional)</span></label>
+            <label class="upload-zone" for="spark-image">
+              <div class="upload-icon">📷</div>
+              <div class="upload-text">Tap to upload · jpg, png, heic</div>
+              <input type="file" id="spark-image" accept="image/*" style="display:none;" onchange="handleImageSelect(this)"/>
+            </label>
+            <div id="spark-preview"></div>
+          </div>
+          <button class="save-btn" id="spark-save-btn" onclick="logSpark()">Save Spark</button>
+        </div>
+        <div class="save-msg" id="spark-save-msg"></div>
+      </div>
+
+      <div class="sidebar-label" style="margin-bottom:0.5rem;">Past Spark sessions</div>
+      <div class="spark-filter-bar">
+        <input class="spark-filter-input" id="spark-search" type="text" placeholder="Search provocation, notes, space…" oninput="renderSparks()"/>
+        <select class="spark-filter-select" id="spark-filter-rung" onchange="renderSparks()">
+          <option value="">All rungs</option>
+          <option value="Rung 1">Rung 1</option>
+          <option value="Rung 2">Rung 2</option>
+          <option value="Rung 3">Rung 3</option>
+          <option value="Rung 4">Rung 4</option>
+          <option value="Other">Other</option>
+        </select>
+        <button class="spark-filter-clear" onclick="clearSparkFilters()">✕ Clear</button>
+      </div>
+      <div id="sparks-gallery">
+        <div class="loading"><span class="spinner"></span>Loading…</div>
+      </div>
+
+    </div>
+
+    <!-- Space Tracker -->
+    <div class="tab-panel" id="panel-tracker">
+
+      <div class="log-form-card">
+        <div class="log-form-title">Log a Visit</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">Space</label>
+            <select class="form-select" id="visit-space">
+              <option value="">Select space…</option>
+              <optgroup label="Living Inquiry">
+                <option value="games-table">Games Table</option>
+                <option value="kopitiam">Kopitiam</option>
+                <option value="light-space">Light Space</option>
+                <option value="construction-space">Construction Space</option>
+                <option value="clay-workshop">Clay Workshop</option>
+              </optgroup>
+              <optgroup label="Investigation Cycle">
+                <option value="investigation-station">Investigation Station</option>
+                <option value="ruang-seni">Ruang Seni</option>
+                <option value="the-digital-age">The Digital Age</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Child</label>
+            <select class="form-select" id="visit-child">
+              <option value="">Select child…</option>
+              <optgroup label="4 years">
+                <option value="4NaMar">4NaMar</option>
+                <option value="4NaLia">4NaLia</option>
+                <option value="4Osc">4Osc</option>
+                <option value="4NatChi">4NatChi</option>
+                <option value="4Mad">4Mad</option>
+              </optgroup>
+              <optgroup label="5 years">
+                <option value="5S-H">5S-H</option>
+                <option value="5Ing">5Ing</option>
+                <option value="5Isa">5Isa</option>
+                <option value="5Kai">5Kai</option>
+              </optgroup>
+              <optgroup label="6 years">
+                <option value="6La">6La</option>
+                <option value="6Jo">6Jo</option>
+                <option value="6Tar">6Tar</option>
+                <option value="6Adh">6Adh</option>
+                <option value="6Cel">6Cel</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="visit-date"/>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Observations <span style="font-weight:300;text-transform:none;letter-spacing:0;">(optional)</span></label>
+            <input class="form-input" type="text" id="visit-obs" placeholder="Quick note…"/>
+          </div>
+          <button class="save-btn" id="save-visit-btn" onclick="logVisit()">Save Visit</button>
+        </div>
+        <div class="save-msg" id="save-msg"></div>
+      </div>
+
+      <div class="coverage-card" id="coverage-card">
+        <div class="coverage-header">Space Coverage — all 14 children</div>
+        <div id="coverage-rows"><div class="loading"><span class="spinner"></span>Loading…</div></div>
+      </div>
+
+    </div>
+
+    <!-- Skills -->
+    <div class="tab-panel" id="panel-skills">
+      <div style="font-size:0.73rem; color:var(--ink-faint); margin-bottom:0.75rem;">Click any skill to copy the trigger phrase.</div>
+      <div class="skills-grid">
+        <div class="skill-card" onclick="copySkill(this,'log discussion')"><div class="skill-cmd">log discussion</div><div class="skill-desc">Log today's Spark session to the discussions log.</div><div class="skill-hint">Click to copy</div></div>
+        <div class="skill-card" onclick="copySkill(this,'log observation')"><div class="skill-cmd">log observation</div><div class="skill-desc">Process a raw obs file into a structured inquiry thread entry.</div><div class="skill-hint">Click to copy</div></div>
+        <div class="skill-card" onclick="copySkill(this,'log cycle')"><div class="skill-cmd">log cycle</div><div class="skill-desc">Process a week note into a cycle record and showcase tracker entry.</div><div class="skill-hint">Click to copy</div></div>
+        <div class="skill-card" onclick="copySkill(this,'extend [space name]')"><div class="skill-cmd">extend [space name]</div><div class="skill-desc">Get the next conceptual move for a named space.</div><div class="skill-hint">Click to copy</div></div>
+        <div class="skill-card" onclick="copySkill(this,'log care note for [child code]')"><div class="skill-cmd">log care note for [child code]</div><div class="skill-desc">Individual support and observation log with reference library.</div><div class="skill-hint">Click to copy</div></div>
+        <div class="skill-card" onclick="copySkill(this,'show me care notes for [child code]')"><div class="skill-cmd">show me care notes for [child code]</div><div class="skill-desc">Retrieve and synthesise the full care log for a child.</div><div class="skill-hint">Click to copy</div></div>
+        <div class="skill-card" onclick="copySkill(this,'find this week\'s ECE reading')"><div class="skill-cmd">find this week's ECE reading</div><div class="skill-desc">Run saturday-research on demand.</div><div class="skill-hint">Click to copy</div></div>
+        <div class="skill-card" onclick="copySkill(this,'refresh dashboard')"><div class="skill-cmd">refresh dashboard</div><div class="skill-desc">Sync local JSON files to Supabase and reload live data.</div><div class="skill-hint">Click to copy</div></div>
+        <div class="skill-card" onclick="openGoalsPanel()"><div class="skill-cmd">PP Goals reference</div><div class="skill-desc">Open the full DOW / LL / NUM goals panel with CSPE codes.</div><div class="skill-hint">Click to open</div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Goals overlay -->
+<div class="care-overlay" id="care-overlay">
+  <div class="care-backdrop" onclick="closeCareDrawer()"></div>
+  <div class="care-panel">
+    <div class="care-panel-hd">
+      <div>
+        <div class="care-panel-name" id="care-drawer-name">—</div>
+        <div class="care-panel-age" id="care-drawer-age"></div>
+      </div>
+      <button class="care-panel-close" onclick="closeCareDrawer()">✕</button>
+    </div>
+    <div class="care-panel-body" id="care-drawer-body"></div>
+  </div>
+</div>
+
+<div class="goals-overlay" id="goals-overlay">
+  <div class="goals-backdrop" onclick="closeGoalsPanel()"></div>
+  <div class="goals-panel">
+    <div class="goals-header">
+      <span class="goals-title">PP Developmental Goals</span>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span style="font-size:0.65rem;color:var(--ink-faint);">
+          <span class="badge badge-c" style="font-size:0.58rem;">C</span> Cognitive &nbsp;
+          <span class="badge badge-s" style="font-size:0.58rem;">S</span> Social &nbsp;
+          <span class="badge badge-p" style="font-size:0.58rem;">P</span> Physical
+        </span>
+        <button class="goals-close" onclick="closeGoalsPanel()">✕</button>
+      </div>
+    </div>
+    <div class="goals-body" id="goals-body">
+      <div class="loading"><span class="spinner"></span>Loading goals…</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ── Config ──
+  const SUPA_URL = 'https://enxwngaadtlizwqlufvy.supabase.co'
+  const SUPA_KEY = 'sb_publishable_o-hDwqQRka12ov6TzSDIAA_GF9PIeMA'
+  const client   = supabase.createClient(SUPA_URL, SUPA_KEY)
+
+  // ── Helpers ──
+  async function db(table, filters={}) {
+    let q = client.from(table).select('*')
+    Object.entries(filters).forEach(([k,v]) => { q = q.eq(k,v) })
+    const { data, error } = await q
+    if (error) throw error
+    return data || []
+  }
+
+  function sgtToday() {
+    const d = new Date(Date.now() + 8*60*60*1000)
+    return d.toISOString().split('T')[0]
+  }
+
+  function fmt(d) {
+    if (!d) return '—'
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-SG', { day:'numeric', month:'short', year:'numeric' })
+  }
+
+  // ── State ──
+  let allThreads = [], allCycles = [], allCareNotes = [], allVisits = [], allSparks = []
+  let watching = new Set()
+  let activeRung = 0
+
+  // ── Load all data ──
+  async function loadAll() {
+    try {
+      const [t, c, cn, v] = await Promise.all([
+        db('inquiry_threads', {status:'active'}),
+        db('investigation_cycles', {status:'active'}),
+        db('care_notes'),
+        db('space_visits')
+      ])
+      const { data: sp } = await client.from('sparks').select('*').order('date_logged', { ascending: false })
+      allSparks = sp || []
+
+      const { data: b } = await client.from('briefs').select('*').eq('date', sgtToday()).limit(1)
+
+      allThreads = t; allCycles = c; allCareNotes = cn; allVisits = v
+      renderAll(b?.[0] || null)
+      updateConnectionBadge(true)
+    } catch(e) {
+      updateConnectionBadge(false)
+      console.error(e)
+      document.getElementById('spaces-container').innerHTML = `<div class="empty-card"><strong>Error:</strong> ${e.message || JSON.stringify(e)}</div>`
+    }
+  }
+
+  function updateConnectionBadge(ok) {
+    const b = document.getElementById('conn-badge')
+    if (ok) {
+      b.className = 'live-badge'
+      b.innerHTML = '<span class="live-dot"></span>Live'
+    } else {
+      b.className = 'error-badge'
+      b.innerHTML = '⚠ Offline'
+    }
+  }
+
+  // ── Render all ──
+  function renderAll(brief) {
+    renderStats()
+    renderLadderPips()
+    renderSpaces()
+    renderBrief(brief)
+    renderThreads()
+    renderCycles()
+    renderCareNotes()
+    renderCoverage()
+    renderPulse()
+    renderEdges()
+    renderSparks()
+    setDefaultDate()
+  }
+
+  // ── Stats ──
+  function renderStats() {
+    const uniqueChildren = new Set(allCareNotes.map(n => n.child_code)).size
+    document.getElementById('tc-threads').textContent = allThreads.length
+    document.getElementById('tc-cycles').textContent = allCycles.length
+    document.getElementById('tc-care').textContent = uniqueChildren
+  }
+
+  function renderPulse() {
+    const el = document.getElementById('pulse-card')
+    if (!el) return
+    const TERM_START = new Date('2026-06-22T00:00:00+08:00')
+    const TERM_END   = new Date('2026-08-30T00:00:00+08:00')
+    const now        = new Date(Date.now() + 8*60*60*1000)
+    now.setHours(0,0,0,0)
+    const msDay = 1000*60*60*24
+    const daysToStart = Math.ceil((TERM_START - now) / msDay)
+    const daysToEnd   = Math.ceil((TERM_END - now) / msDay)
+    const totalDays   = 70
+    if (daysToStart > 0) {
+      el.innerHTML = `
+        <div style="font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-size:1.3rem;color:var(--ink);line-height:1;">Starts in ${daysToStart}</div>
+        <div style="font-size:0.67rem;color:var(--ink-faint);margin-top:3px;">days · Term 3 begins 22 June 2026</div>`
+      return
+    }
+    const daysIn  = totalDays - daysToEnd
+    const weekNum = Math.min(10, Math.ceil(daysIn / 7))
+    const pct     = Math.min(100, Math.round((daysIn / totalDays) * 100))
+    const wksLeft = Math.max(0, Math.ceil(daysToEnd / 7))
+    el.innerHTML = `
+      <div class="pulse-top">
+        <div><div class="pulse-week">Week ${weekNum}</div><div class="pulse-meta">Term 3 · 2026</div></div>
+        <div class="pulse-right"><div class="pulse-days">${daysToEnd}</div><div class="pulse-meta">days left</div></div>
+      </div>
+      <div class="pulse-sub">Showcase in ${wksLeft} week${wksLeft!==1?'s':''}</div>
+      <div class="pulse-bar-wrap"><div class="pulse-bar-fill" style="width:${pct}%"></div></div>
+      <div class="pulse-bar-labels"><span>Wk 1</span><span>Wk 10</span></div>`
+  }
+
+  function renderEdges() {
+    const el = document.getElementById('edges-card')
+    if (!el) return
+    const edges = []
+    // 1. Most under-visited space
+    const ranked = SPACES.map(s => {
+      const unique = new Set(allVisits.filter(v => v.space === s.key).map(v => v.child_code)).size
+      return { name: s.name, unique }
+    }).sort((a,b) => a.unique - b.unique)
+    const least = ranked[0]
+    if (least.unique < TOTAL_CHILDREN) {
+      edges.push(`<strong>${least.name}</strong> — ${least.unique === 0 ? 'no children have visited yet' : `only ${least.unique} of ${TOTAL_CHILDREN} children visited`}`)
+    }
+    // 2. Spaces with no active thread
+    const withThreads = new Set(allThreads.map(t => t.space))
+    const noThread = SPACES.filter(s => s.type === 'Living inquiry' && !withThreads.has(s.key))
+    if (noThread.length > 0) edges.push(`<strong>${noThread[0].name}</strong> has no active inquiry thread`)
+    // 3. Last observation logged
+    if (allThreads.length > 0) {
+      const latest = allThreads.reduce((a,b) => new Date(a.date_logged) > new Date(b.date_logged) ? a : b)
+      const days = Math.round((Date.now() + 8*60*60*1000 - new Date(latest.date_logged+'T00:00:00').getTime()) / (1000*60*60*24))
+      if (days > 5) edges.push(`Last observation logged <strong>${days} days ago</strong>`)
+    }
+    if (edges.length === 0) {
+      el.innerHTML = '<div class="edge-row"><div class="edge-dot" style="background:var(--accent)"></div><div class="edge-text">All spaces active and covered — well done.</div></div>'
+      return
+    }
+    el.innerHTML = edges.slice(0,3).map(e => `<div class="edge-row"><div class="edge-dot"></div><div class="edge-text">${e}</div></div>`).join('')
+  }
+
+  // ── Ladder pips ──
+  function renderLadderPips() {
+    [1,2,3,4].forEach(r => {
+      const hasT = allThreads.some(t => t.ladder_rung === r)
+      const hasC = allCycles.some(c => c.ladder_rung === r)
+      const btn = document.getElementById(`rung-${r}`)
+      if (hasT || hasC) btn.classList.add('has-activity')
+      else btn.classList.remove('has-activity')
+    })
+  }
+
+  // ── Spaces ──
+  const SPACES = [
+    { name:'Games Table', type:'Living inquiry', key:'games-table' },
+    { name:'Kopitiam', type:'Living inquiry', key:'kopitiam' },
+    { name:'Light Space', type:'Living inquiry', key:'light-space' },
+    { name:'Construction Space', type:'Living inquiry', key:'construction-space' },
+    { name:'Clay Workshop', type:'Living inquiry', key:'clay-workshop' },
+    { name:'Investigation Station', type:'Investigation', key:'investigation-station' },
+    { name:'Ruang Seni', type:'Investigation', key:'ruang-seni' },
+    { name:'The Digital Age', type:'Investigation', key:'the-digital-age' },
+  ]
+
+  function renderSpaces() {
+    const living = SPACES.filter(s => s.type === 'Living inquiry')
+    const invest = SPACES.filter(s => s.type === 'Investigation')
+    let html = ''
+    html += `<div class="spaces-group-label">Living Inquiry Spaces</div><div class="spaces-grid">`
+    living.forEach(s => {
+      const t = allThreads.find(x => x.space === s.key)
+      const cls = t ? 'space-tile live-t' : 'space-tile'
+      const hint = t ? `${t.concepts_explored?.[0] || ''} · Rung ${t.ladder_rung}` : 'No thread yet'
+      html += `<div class="${cls}" onclick="switchTab('threads',document.querySelectorAll('.tab-btn')[2])">
+        <div class="tile-type">${s.type}</div>
+        <div class="tile-name">${s.name}</div>
+        <div class="tile-hint">${hint}</div>
+      </div>`
+    })
+    html += `</div><div class="spaces-group-label" style="margin-top:0.75rem;">Investigation Cycle Spaces</div><div class="spaces-grid">`
+    invest.forEach(s => {
+      const c = allCycles.find(x => x.space === s.key || x.investigation_name?.toLowerCase().includes(s.key.replace('-',' ')))
+      const cls = c ? 'space-tile live-c' : 'space-tile'
+      const hint = c ? `${c.investigation_name?.split('—')[0]?.trim() || ''} · Wk ${c.week_number} · Rung ${c.ladder_rung}` : 'No cycle yet'
+      html += `<div class="${cls}" onclick="switchTab('investigations',document.querySelectorAll('.tab-btn')[3])">
+        <div class="tile-type">${s.type}</div>
+        <div class="tile-name">${s.name}</div>
+        <div class="tile-hint">${hint}</div>
+      </div>`
+    })
+    html += `</div>`
+    document.getElementById('spaces-container').innerHTML = html
+  }
+
+  // ── Morning Brief ──
+  function renderBrief(brief) {
+    const el = document.getElementById('brief-container')
+    const today = sgtToday()
+    const label = new Date(today + 'T00:00:00').toLocaleDateString('en-SG', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+
+    const header = `
+      <div class="brief-header">
+        <div class="brief-header-left">
+          <span class="brief-title">Morning Brief</span>
+          <span class="brief-date">${label}</span>
+        </div>
+        <button class="brief-gen-btn" id="brief-gen-btn" onclick="copyBriefCmd(event)">Generate now</button>
+      </div>`
+
+    if (!brief) {
+      el.innerHTML = `<div class="brief-panel">${header}
+        <div class="brief-empty-wrap">
+          <div class="brief-empty-icon">🌱</div>
+          <div class="brief-empty-title">No brief for today yet</div>
+          <div class="brief-empty-sub">It fires automatically at 6:45 am.<br>To generate it earlier — click <strong>Generate now</strong>, then paste the copied command into Claude.</div>
+        </div></div>`
+      return
+    }
+
+    const content = brief.content || ''
+    const sections = content.split(/^## /m).filter(Boolean)
+    const parts = []
+
+    sections.forEach(s => {
+      const lines = s.trim().split('\n')
+      const title = lines[0].replace(/^#+\s*/, '').trim()
+      const body  = lines.slice(1).join('\n').trim()
+      if (!body || title.toLowerCase().startsWith('morning brief')) return
+
+      let inner
+      const t = title.toLowerCase()
+
+      if (t.includes('spark') || t.includes('provocation')) {
+        inner = `<div class="brief-spark-box">${body}</div>
+                 <div class="brief-source">↳ Drawn from your most recent discussion log</div>`
+
+      } else if (t.includes('thread')) {
+        const rows = body.split('\n').filter(l => l.trim().startsWith('-'))
+        inner = rows.length
+          ? `<div class="brief-thread-list">${rows.map(l => `<div class="brief-thread-row"><div class="brief-dot green"></div><div class="brief-thread-text">${l.replace(/^-\s*/,'')}</div></div>`).join('')}</div>`
+          : `<div class="brief-generic">${body}</div>`
+
+      } else if (t.includes('investigation')) {
+        const rows = body.split('\n').filter(l => l.trim().startsWith('-'))
+        inner = rows.length
+          ? `<div class="brief-thread-list">${rows.map(l => `<div class="brief-thread-row"><div class="brief-dot gold"></div><div class="brief-thread-text">${l.replace(/^-\s*/,'')}</div></div>`).join('')}</div>`
+          : `<div class="brief-generic">${body}</div>`
+
+      } else if (t.includes('nest')) {
+        inner = `<div class="brief-nest-box">${body}</div>`
+
+      } else if (t.includes('schedule')) {
+        inner = `<div class="brief-sched">${body}</div>`
+
+      } else {
+        inner = `<div class="brief-generic">${body}</div>`
+      }
+
+      parts.push(`<div class="brief-section"><div class="brief-section-title">${title}</div>${inner}</div>`)
+    })
+
+    const body = parts.length
+      ? parts.join('<div class="brief-divider"></div>')
+      : `<div class="brief-generic" style="white-space:pre-wrap;">${content}</div>`
+
+    el.innerHTML = `<div class="brief-panel">${header}<div class="brief-body">${body}</div></div>`
+  }
+
+  // ── Threads ──
+  function renderThreads() {
+    const el = document.getElementById('threads-container')
+    const filtered = activeRung === 0 ? allThreads : allThreads.filter(t => t.ladder_rung === activeRung)
+    if (!filtered.length) { el.innerHTML = `<div class="empty-card">${activeRung ? `No active threads at Rung ${activeRung}.` : 'No active inquiry threads yet. Drop an obs file and say "log observation".'}</div>`; return }
+    el.innerHTML = filtered.map((t,i) => `
+      <div class="card" id="tc-${i}">
+        <div class="card-header" onclick="toggleCard('tc-${i}')">
+          <div class="card-meta">
+            <div class="card-title-row">
+              <span class="card-name">${spaceName(t.space)}</span>
+              <span class="badge badge-rung">Rung ${t.ladder_rung}</span>
+              <span class="badge badge-active">● active</span>
+              ${(t.pp_goals||[]).slice(0,3).map(ppGoalBadge).join('')}
+            </div>
+            <div class="card-summary">${(t.concepts_explored||[]).join(' · ') || '—'}</div>
+          </div>
+          <span class="card-toggle">▾</span>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            ${threadImgZone(t, 'thread')}
+            <div class="detail-row"><div class="detail-label">Ladder rung</div><div class="detail-val">Rung ${t.ladder_rung} — ${rungQ(t.ladder_rung)}</div></div>
+            <div class="detail-row"><div class="detail-label">Concepts explored</div><div class="tag-list">${(t.concepts_explored||[]).map(c=>`<span class="tag">${c}</span>`).join('')||'<span style="font-size:0.75rem;color:var(--ink-faint);font-style:italic;">—</span>'}</div></div>
+            ${renderCurrentUnderstanding(t, 'thread')}
+            <div class="detail-row"><div class="detail-label">Skills used</div><div class="tag-list">${(t.skills_used||[]).map(s=>`<span class="tag">${s}</span>`).join('')||'<span style="font-size:0.75rem;color:var(--ink-faint);font-style:italic;">—</span>'}</div></div>
+            <div class="detail-row"><div class="detail-label">PRAISE dispositions</div><div class="tag-list">${(t.dispositions||[]).map(d=>`<span class="tag">${d}</span>`).join('')||'<span style="font-size:0.75rem;color:var(--ink-faint);font-style:italic;">—</span>'}</div></div>
+            ${(t.pp_goals||[]).length ? `<div class="detail-row"><div class="detail-label">PP Goals</div><div class="tag-list">${(t.pp_goals||[]).map(ppGoalBadge).join('')}</div></div>` : ''}
+            ${t.extension_suggested ? `<div class="ext-box"><div class="detail-label">Suggested extension</div><div class="detail-val">${t.extension_suggested}</div></div>` : ''}
+            <div class="detail-row"><div class="detail-label">Last logged</div><div class="detail-val">${fmt(t.date_logged)}</div></div>
+          </div>
+        </div>
+      </div>`).join('')
+  }
+
+  // ── Cycles ──
+  function renderCycles() {
+    const el = document.getElementById('cycles-container')
+    const filtered = activeRung === 0 ? allCycles : allCycles.filter(c => c.ladder_rung === activeRung)
+    if (!filtered.length) { el.innerHTML = `<div class="empty-card">${activeRung ? `No active investigations at Rung ${activeRung}.` : 'No active investigation cycles yet.'}</div>`; return }
+    el.innerHTML = filtered.map((c,i) => `
+      <div class="card" id="cc-${i}">
+        <div class="card-header" onclick="toggleCard('cc-${i}')">
+          <div class="card-meta">
+            <div class="card-title-row">
+              <span class="card-name">${c.investigation_name?.split('—')[0]?.trim() || c.investigation_name}</span>
+              <span class="badge badge-rung">Rung ${c.ladder_rung}</span>
+              <span class="badge badge-week">Week ${c.week_number}</span>
+              <span class="badge badge-active">● active</span>
+              ${(c.pp_goals||[]).slice(0,3).map(ppGoalBadge).join('')}
+            </div>
+            <div class="card-summary">${c.big_idea_connection || '—'}</div>
+          </div>
+          <span class="card-toggle">▾</span>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            ${threadImgZone(c, 'cycle')}
+            <div class="detail-row"><div class="detail-label">Ladder rung</div><div class="detail-val">Rung ${c.ladder_rung} — ${rungQ(c.ladder_rung)}</div></div>
+            ${renderCurrentUnderstanding(c, 'cycle')}
+            ${c.space_setup ? `<div class="detail-row"><div class="detail-label">Space setup</div><div class="detail-val">${c.space_setup}</div></div>` : ''}
+            ${c.planned_provocation ? `<div class="detail-row"><div class="detail-label">Planned provocation</div><div class="detail-val">"${c.planned_provocation}"</div></div>` : ''}
+            ${c.educator_modifications ? `<div class="detail-row"><div class="detail-label">Educator modifications</div><div class="detail-val">${c.educator_modifications}</div></div>` : ''}
+            ${c.observations ? `<div class="detail-row"><div class="detail-label">Observations</div><div class="detail-val">${c.observations}</div></div>` : ''}
+            ${(c.pp_goals||[]).length ? `<div class="detail-row"><div class="detail-label">PP Goals</div><div class="tag-list">${(c.pp_goals||[]).map(ppGoalBadge).join('')}</div></div>` : ''}
+            ${c.next_cycle_plan ? `<div class="ext-box"><div class="detail-label">Next cycle plan</div><div class="detail-val">${c.next_cycle_plan}</div></div>` : ''}
+          </div>
+        </div>
+      </div>`).join('')
+  }
+
+  // ── Care notes ──
+  const CHILDREN = [
+    {code:'4NaMar',age:'4 yrs'},{code:'4NaLia',age:'4 yrs'},{code:'4Osc',age:'4 yrs'},
+    {code:'4NatChi',age:'4 yrs'},{code:'4Mad',age:'4 yrs'},{code:'5S-H',age:'5 yrs'},
+    {code:'5Ing',age:'5 yrs'},{code:'5Isa',age:'5 yrs'},{code:'5Kai',age:'5 yrs'},
+    {code:'6La',age:'6 yrs'},{code:'6Jo',age:'6 yrs'},{code:'6Tar',age:'6 yrs'},
+    {code:'6Adh',age:'6 yrs'},{code:'6Cel',age:'6 yrs'}
+  ]
+  const TOTAL_CHILDREN = 14
+
+  function renderCareNotes() {
+    const grid = document.getElementById('care-grid')
+    const byChild = {}
+    allCareNotes.forEach(n => {
+      if (!byChild[n.child_code]) byChild[n.child_code] = { care: [], parent: [] }
+      if (!n.note_type || n.note_type === 'care') byChild[n.child_code].care.push(n)
+      else byChild[n.child_code].parent.push(n)
+    })
+    const withNotes = CHILDREN.filter(c => {
+      const d = byChild[c.code]
+      return d && (d.care.length + d.parent.length > 0)
+    }).length
+    document.getElementById('tc-care').textContent = withNotes
+    grid.innerHTML = CHILDREN.map(child => {
+      const data = byChild[child.code] || { care: [], parent: [] }
+      const total = data.care.length + data.parent.length
+      const hasNotes = total > 0
+      let status = 'No notes yet'
+      if (hasNotes) {
+        const parts = []
+        if (data.care.length) parts.push(`${data.care.length} obs`)
+        if (data.parent.length) parts.push(`${data.parent.length} parent`)
+        status = '● ' + parts.join(' · ')
+      }
+      return `<div class="child-card ${hasNotes ? 'has-notes' : ''}" onclick="openCareDrawer('${child.code}')">
+        <div class="child-code">${child.code}</div>
+        <div class="child-age">${child.age}</div>
+        <div class="child-status">${status}</div>
+      </div>`
+    }).join('')
+  }
+
+  // ── Care drawer ──
+  let activeCareChild = null
+
+  function openCareDrawer(code) {
+    const child = CHILDREN.find(c => c.code === code)
+    if (!child) return
+    activeCareChild = code
+    document.getElementById('care-drawer-name').textContent = code
+    document.getElementById('care-drawer-age').textContent = child.age
+    renderCareDrawerBody(code)
+    document.getElementById('care-overlay').classList.add('open')
+  }
+
+  function closeCareDrawer() {
+    document.getElementById('care-overlay').classList.remove('open')
+    activeCareChild = null
+  }
+
+  function renderCareDrawerBody(code) {
+    const body = document.getElementById('care-drawer-body')
+    const notes = allCareNotes.filter(n => n.child_code === code)
+    const careObs = notes.filter(n => !n.note_type || n.note_type === 'care')
+      .sort((a, b) => new Date(b.date_logged) - new Date(a.date_logged))
+    const parentComms = notes.filter(n => n.note_type === 'parent')
+      .sort((a, b) => new Date(b.date_logged) - new Date(a.date_logged))
+    const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local time
+
+    body.innerHTML = `
+      <button class="care-add-btn" onclick="toggleCareForm('cf-obs')">+ Log care observation</button>
+      <button class="care-add-btn" onclick="toggleCareForm('cf-parent')">+ Log parent communication</button>
+
+      <div class="care-log-form" id="cf-obs">
+        <div class="care-log-form-title">New care observation</div>
+        <div class="care-form-row">
+          <div class="care-form-field">
+            <label class="care-form-label">Date</label>
+            <input class="care-form-input" type="date" id="cf-obs-date" value="${today}"/>
+          </div>
+          <div class="care-form-field">
+            <label class="care-form-label">Type</label>
+            <select class="care-form-input" id="cf-obs-type">
+              <option value="Regulation">Regulation</option>
+              <option value="Behaviour">Behaviour</option>
+              <option value="Wellbeing">Wellbeing</option>
+              <option value="Medical">Medical</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+        </div>
+        <div class="care-form-field full">
+          <label class="care-form-label">What happened</label>
+          <textarea class="care-form-textarea" id="cf-obs-what" placeholder="Describe what occurred — include duration, trigger, response, and how it resolved…"></textarea>
+        </div>
+        <div class="care-form-field full">
+          <label class="care-form-label">Pattern flags <span style="font-weight:300;font-style:italic;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <input class="care-form-input" id="cf-obs-pattern" placeholder="e.g. triggers when schedule changes, settles faster after movement break…"/>
+        </div>
+        <div class="care-form-field full">
+          <label class="care-form-label">Next step <span style="font-weight:300;font-style:italic;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <input class="care-form-input" id="cf-obs-next" placeholder="e.g. pre-warn about transitions, try countdown timer…"/>
+        </div>
+        <button class="care-form-save" id="cf-obs-save" onclick="logCareEntry('${code}','care')">Save observation</button>
+        <div class="care-form-msg" id="cf-obs-msg"></div>
+      </div>
+
+      <div class="care-log-form" id="cf-parent">
+        <div class="care-log-form-title">New parent / therapist communication</div>
+        <div class="care-form-row">
+          <div class="care-form-field">
+            <label class="care-form-label">Date</label>
+            <input class="care-form-input" type="date" id="cf-parent-date" value="${today}"/>
+          </div>
+          <div class="care-form-field">
+            <label class="care-form-label">Shared by</label>
+            <input class="care-form-input" id="cf-parent-source" placeholder="e.g. Mum, Dad, OT, Therapist…"/>
+          </div>
+        </div>
+        <div class="care-form-field full">
+          <label class="care-form-label">What they shared</label>
+          <textarea class="care-form-textarea" id="cf-parent-what" placeholder="What did they tell you? Include observations from home, concerns, therapist updates…"></textarea>
+        </div>
+        <div class="care-form-field full">
+          <label class="care-form-label">Strategy / priority from home <span style="font-weight:300;font-style:italic;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <input class="care-form-input" id="cf-parent-strategy" placeholder="e.g. countdown timer working well, avoid sudden transitions…"/>
+        </div>
+        <button class="care-form-save" id="cf-parent-save" onclick="logCareEntry('${code}','parent')">Save communication</button>
+        <div class="care-form-msg" id="cf-parent-msg"></div>
+      </div>
+
+      <div class="care-section-hd">Care observations (${careObs.length})</div>
+      ${careObs.length ? careObs.map(n => `
+        <div class="care-entry">
+          <div class="care-entry-hd">
+            <span class="care-entry-date">${fmt(n.date_logged)}</span>
+            ${n.entry_type ? `<span class="care-entry-badge obs">${n.entry_type}</span>` : ''}
+          </div>
+          <div class="care-entry-body">${n.what_happened || '—'}</div>
+          ${n.pattern_flags ? `<div class="care-entry-sub"><strong>Pattern: </strong>${n.pattern_flags}</div>` : ''}
+          ${n.suggested_next_step ? `<div class="care-entry-sub"><strong>Next step: </strong>${n.suggested_next_step}</div>` : ''}
+        </div>`).join('') : '<div class="care-empty">No observations logged yet.</div>'}
+
+      <div class="care-section-hd">Parent communications (${parentComms.length})</div>
+      ${parentComms.length ? parentComms.map(n => `
+        <div class="care-entry">
+          <div class="care-entry-hd">
+            <span class="care-entry-date">${fmt(n.date_logged)}</span>
+            ${n.source ? `<span class="care-entry-badge parent">${n.source}</span>` : ''}
+          </div>
+          <div class="care-entry-body">${n.what_happened || '—'}</div>
+          ${n.strategy_from_home ? `<div class="care-entry-sub"><strong>Strategy from home: </strong>${n.strategy_from_home}</div>` : ''}
+        </div>`).join('') : '<div class="care-empty">No parent communications logged yet.</div>'}
+    `
+  }
+
+  function toggleCareForm(id) {
+    const el = document.getElementById(id)
+    if (!el) return
+    el.classList.toggle('open')
+  }
+
+  async function logCareEntry(code, type) {
+    const pfx = type === 'care' ? 'cf-obs' : 'cf-parent'
+    const dateEl  = document.getElementById(`${pfx}-date`)
+    const whatEl  = document.getElementById(`${pfx}-what`)
+    const saveBtn = document.getElementById(`${pfx}-save`)
+    const msgEl   = document.getElementById(`${pfx}-msg`)
+
+    const date = dateEl?.value
+    const what = whatEl?.value.trim()
+
+    if (!date || !what) {
+      msgEl.style.color = '#c0392b'
+      msgEl.textContent = 'Date and description are required.'
+      return
+    }
+
+    saveBtn.textContent = 'Saving…'
+    saveBtn.disabled = true
+    msgEl.textContent = ''
+
+    const row = { child_code: code, date_logged: date, note_type: type, what_happened: what }
+
+    if (type === 'care') {
+      const t = document.getElementById('cf-obs-type')?.value
+      const p = document.getElementById('cf-obs-pattern')?.value.trim()
+      const n = document.getElementById('cf-obs-next')?.value.trim()
+      if (t) row.entry_type = t
+      if (p) row.pattern_flags = p
+      if (n) row.suggested_next_step = n
+    } else {
+      const src = document.getElementById('cf-parent-source')?.value.trim()
+      const str = document.getElementById('cf-parent-strategy')?.value.trim()
+      if (src) row.source = src
+      if (str) row.strategy_from_home = str
+    }
+
+    const { data, error } = await client.from('care_notes').insert(row).select()
+
+    if (error) {
+      saveBtn.textContent = type === 'care' ? 'Save observation' : 'Save communication'
+      saveBtn.disabled = false
+      msgEl.style.color = '#c0392b'
+      msgEl.textContent = 'Save failed: ' + error.message
+      return
+    }
+
+    allCareNotes.push(data[0])
+
+    // Reset fields
+    whatEl.value = ''
+    if (type === 'care') {
+      const p = document.getElementById('cf-obs-pattern'); if (p) p.value = ''
+      const n = document.getElementById('cf-obs-next');    if (n) n.value = ''
+    } else {
+      const s = document.getElementById('cf-parent-source');   if (s) s.value = ''
+      const t = document.getElementById('cf-parent-strategy'); if (t) t.value = ''
+    }
+
+    saveBtn.textContent = type === 'care' ? 'Save observation' : 'Save communication'
+    saveBtn.disabled = false
+    msgEl.style.color = 'var(--accent)'
+    msgEl.textContent = 'Saved ✓'
+    setTimeout(() => { msgEl.textContent = '' }, 2500)
+
+    renderCareDrawerBody(code) // re-render timeline
+    renderCareNotes()          // update grid tile status
+  }
+
+  // ── Utilities ──
+  function spaceName(key) {
+    const s = SPACES.find(x => x.key === key)
+    return s ? s.name : key
+  }
+
+  function rungQ(r) {
+    const qs = ['','How do we care for ourselves and each other?','How do we care for our materials and spaces?','How do we care for the world around us?','What changes do I want to make to the world I live in?']
+    return qs[r] || ''
+  }
+
+  // ── PP Developmental Goals ──
+  const PP_GOALS = {
+    DOW: {
+      label: 'Discovery of the World',
+      N2: {
+        A: { name:'Observation', cspe:'C', goals:[[1,'Look and listen'],[2,'Ask questions – What and Why']] },
+        B: { name:'Exploration', cspe:'C', goals:[[1,'Use audio, visual, tactile, taste and smell'],[2,'Enjoy hands-on activities']] },
+        C: { name:'Concepts', cspe:'C', goals:[[1,'Begin to make comparisons with properties of objects'],[2,'Begin to express similarities and differences'],[3,'Use language to identify and communicate experiences'],[4,'Understand time in relation to day and night']] }
+      },
+      K1: {
+        A: { name:'Observation', cspe:'C', goals:[[1,'Ask questions'],[2,'Manipulate objects / properties to have a closer look'],[3,'Familiarise with properties of objects'],[4,'Notice changes']] },
+        B: { name:'Exploration', cspe:'C', goals:[[1,'Gain direct information through 5 senses'],[2,'Participate actively in exploration'],[3,'Enjoy hands-on activities'],[4,'Make comparisons']] },
+        C: { name:'Concepts', cspe:'C', goals:[[1,'Compare and contrast'],[2,'Use language to communicate different experiences'],[3,'Understand the relationships between structure of an object and the action it performs'],[4,'Understand time in relation to day/night/morning/afternoon'],[5,'Understand weather in relation to sunny-hot, windy-cold, cloudy-cool, rainy-wet']] }
+      },
+      K2: {
+        A: { name:'Observation', cspe:'C', goals:[[1,'Attentive to details'],[2,'Use apparatus'],[3,'Engage in quantitative and qualitative observation'],[4,'Write observation']] },
+        B: { name:'Exploration', cspe:'C', goals:[[1,'Participate actively in exploration'],[2,'Has keen interest to investigate further'],[3,'Engage in experiments to find answers'],[4,'Ask questions to concretize & reinforce learning'],[5,'Compare & contrast']] },
+        C: { name:'Concepts', cspe:'C', goals:[[1,'Track changes and development in experiments'],[2,'Predict based on past experiences'],[3,'Understand season & time (spring, summer, autumn, winter, dry & wet)'],[4,'Has keen interest in changes, transformation and processes']] }
+      }
+    },
+    LL: {
+      label: 'Language and Literacy',
+      N2: {
+        A: { name:'Reading & Responding', cspe:'C', goals:[[1,'Sequence pictures to show beginning/middle/end of narrative'],[2,'Express opinion on characters'],[3,'Retell sequence of story']] },
+        B: { name:'Listening', cspe:'C', goals:[[1,'Concentrate for appropriate length of time in large group situations'],[2,'Identify feelings by using interpretation of intonation'],[3,'Be attentive and relaxed in situations where listening is required'],[4,'Recognise common, familiar objects in a variety of settings'],[5,'Understand simple sentences of the form "Here is the book"'],[6,'Understand simple descriptions relating size, shape, position'],[7,'Understand comparisons']] },
+        C: { name:'Speaking', cspe:'S', goals:[[1,'Make appropriate voice inflections'],[2,'Make appropriate facial expressions which match verbal content'],[3,'Use simple sentences of the form "Here is a book"'],[4,'Address familiar people appropriately according to age, gender and status']] },
+        F: { name:'Writing', cspe:'P', goals:[[1,'Produce movements independently'],[2,'Trace words from left to right'],[3,'Copy letters from model on same piece of paper with correct size and orientation']] },
+        G: { name:'Concept of Print', cspe:'C', goals:[[1,'Recognise and name letters of the alphabet in printed script'],[2,'Recognise and name letters of the alphabet in both upper and lower case'],[3,'Count the number of letters in a word']] },
+        H: { name:'Books & Reading', cspe:'C', goals:[[1,'Hold a book upright'],[2,'Turn from first to the last page'],[3,'Point from left to right of a page'],[4,'Read from top to bottom'],[5,'Understand the concept of first page/last page']] },
+        I: { name:'Phonemic Awareness', cspe:'C', goals:[[1,'Name 26 letters of the alphabet in random order'],[2,'Match phonemes with letters'],[3,'Sequence the letters of the alphabet']] }
+      },
+      K1: {
+        A: { name:'Reading & Responding', cspe:'C', goals:[[1,'Sequence words to show beginning/middle end of narrative'],[2,'Share experiences based on story read'],[3,'Say what they liked about a story'],[4,'Retell the story through verbal prompt']] },
+        B: { name:'Listening', cspe:'C', goals:[[1,'Listen for information from a variety of sources'],[2,'Differentiate between a statement, request and instruction'],[3,'Understand "wh" questions'],[4,'Listen to a story and answer questions'],[5,'Listen to a story and make predictions']] },
+        C: { name:'Speaking', cspe:'S', goals:[[1,"Use contractions \"can't, don't, I've, they're\""],[2,'Provide simple description'],[3,'Use "in" and "on" appropriately']] },
+        D: { name:'Language & Address', cspe:'S', goals:[[1,'Use words to seek permission to do something'],[2,'Use words to greet people appropriately']] },
+        E: { name:'Discussion', cspe:'S', goals:[[1,'Take turns to listen and contribute ideas'],[2,'Follow ground-rules for group work or discussion']] },
+        F: { name:'Writing', cspe:'P', goals:[[1,'Hold pencil in the tripod grip'],[2,'Sit appropriately with paper correctly positioned'],[3,'Copy letters from model with correct size, orientation and spacing'],[4,'Write letters without a model with correct orientation'],[5,'Write a word/phrase'],[6,'Use knowledge of letter sounds when writing words']] },
+        G: { name:'Concept of Print', cspe:'C', goals:[[1,'Recognise and name letters of the alphabet in printed script'],[2,'Recognise and name letters of the alphabet in both upper and lower case'],[3,'Return scan to left of page with pointing'],[4,'Read page numbers'],[5,'Read left page before the right page']] },
+        H: { name:'Books & Reading', cspe:'C', goals:[[1,'Identify a pair of rhymes from 3 words presented orally'],[2,'Recognise beginning and ending sounds'],[3,'Orally blend/segment sounds of 3 phonemes to form a word'],[4,'Understanding changes in sound to letter combinations'],[5,'Name the parts of a book']] },
+        I: { name:'Phonemic Awareness', cspe:'C', goals:[[1,'Using letter-sound relationship, distinguishing long and short vowels'],[2,'Say the sound of consonants in the initial and final positions on a printed word'],[3,'Blend sounds to form a 3-letter word']] }
+      },
+      K2: {
+        A: { name:'Reading & Responding', cspe:'C', goals:[[1,'Rearrange sentences based on a told story for Retelling'],[2,'Make predictions on feelings'],[3,'Suggest different endings to the story'],[4,'Suggest/write parallel stories with helping words']] },
+        C: { name:'Speaking', cspe:'S', goals:[[1,'Use pronouns "they, them, us, they\'re"'],[2,'Express differences, similarities and opposites'],[3,'Give clear structured sequenced oral descriptions of events'],[4,'Make predictions about future events'],[5,'Speak fluently & expressively, be attentive and relaxed in verbal situations']] },
+        D: { name:'Language & Address', cspe:'S', goals:[[1,'Use words such as "Please may I…?" to borrow things from peers & adults'],[2,'Use words like "thank you" to express gratitude, without prompting']] },
+        E: { name:'Discussion', cspe:'S', goals:[[1,'Devise ground-rules for group work or discussion'],[2,'Cooperate in project work']] },
+        F: { name:'Writing', cspe:'P', goals:[[1,'Copy words from the board with correct size, orientation and spacing'],[2,'Write letters without a model with correct size and orientation'],[3,'Write a short sentence independently'],[4,'Write 3-5 sentences eg. about a picture series'],[5,'Rearrange words/phrases in the correct sequence to make a familiar sentence'],[6,'Begin a sentence with a capital letter and end with a full stop'],[7,'Make use of word books for spelling support']] },
+        G: { name:'Concept of Print', cspe:'C', goals:[[1,'Return scan to left of page with pointing'],[2,'Know that a sentence is formed by words'],[3,'Count the number of words in a sentence'],[4,'Know that a sentence begins with a capital letter and ends with a full stop'],[5,'Know that a word is made up of letters'],[6,'Know that there is a space between 2 words']] },
+        H: { name:'Books & Reading', cspe:'C', goals:[[1,'Understanding & using terms relating to book/electronic books & types'],[2,'Identify the title, author, illustrator and publisher of a book'],[3,'Locate the required page in a book'],[4,'Identify spine, page number, characters in a book']] },
+        I: { name:'Phonemic Awareness & Grammar', cspe:'C', goals:[[1,'Understanding & using grammatical terms'],[2,'Capitalization: begin sentences with capital letters'],[3,'Begin proper nouns with capital letters'],[4,'Use punctuation marks correctly'],[5,'Identify the different gender in nouns'],[6,'Use common adjectives in sentences']] }
+      }
+    },
+    NUM: {
+      label: 'Numeracy and Math Skills',
+      N2: {
+        A: { name:'Language', cspe:'C', goals:[[1,'Forward/backward (front/back), smaller/bigger (small/big), left/right']] },
+        B: { name:'Arithmetic', cspe:'C', goals:[[1,'Rote count: 1-20'],[2,'Concept counting: 1-10'],[3,'Count on eg 4, 5, … 8, 9'],[4,'Numerical recognition: 1-10'],[5,'Numerical writing: 1-10'],[6,'Instant recognition: 1-10']] },
+        C: { name:'Concepts', cspe:'C', goals:[[1,'Matching – things that complement'],[2,'Matching – things that make logical pairs'],[3,'Parts to whole'],[4,'Sorting: 2 attributes'],[5,'Sequence and order: Numbers 1-10, size and length'],[6,'Patterns: AB AB'],[7,'Time: morning, afternoon, night, breakfast, lunch, dinner'],[8,'Position'],[9,'Comparisons of 2 objects']] }
+      },
+      K1: {
+        A: { name:'Language', cspe:'C', goals:[[1,'Left/right, before/after, above/below, larger/smaller, more/less']] },
+        B: { name:'Arithmetic', cspe:'C', goals:[[1,'Rote count: 1-50'],[2,'Concept counting: 1-10'],[3,'Count on: 11-20'],[4,'Counting backwards: 12, 11, 10, … 2, 1'],[5,'Simple addition within 10'],[6,'Numerical recognition: 1-20'],[7,'Numerical writing: 1-20'],[8,'Ordinal / Cardinal numbers']] },
+        C: { name:'Concepts', cspe:'C', goals:[[1,'Sequence: Numbers, measurement and events'],[2,'Seriation'],[3,'Subitizing'],[4,'Simple graphs'],[5,'Estimation'],[6,'Comparisons of more than 2 objects/attributes'],[7,'Measurement'],[8,'Time: morning, noon, afternoon, evening, night'],[9,'Patterns: ABC ABC']] }
+      },
+      K2: {
+        A: { name:'Language', cspe:'C', goals:[[1,'More than/less than, add/altogether, subtract/take away, groups of, multiply, divide, add on']] },
+        B: { name:'Arithmetic', cspe:'C', goals:[[1,'Rote count: 1-100'],[2,'Concept counting: 1-20'],[3,'Addition and subtraction within 20'],[4,'Number bonds'],[5,'Building larger numbers'],[6,'Mental calculation'],[7,'Instant recognition: 10 and above']] },
+        C: { name:'Concepts', cspe:'C', goals:[[1,'Fractions'],[2,'Time: hour/minutes, clockwise/anti clockwise'],[3,'Money'],[4,'Patterns: number patterns'],[5,'Graphs'],[6,'Parts and whole'],[7,'Quantification'],[8,'Creation and comparison of sets'],[9,'Problem solving']] }
+      }
+    }
+  }
+
+  function ppGoalCSPE(code) {
+    const [domain, level, cat] = code.split('.')
+    return PP_GOALS[domain]?.[level]?.[cat]?.cspe || null
+  }
+
+  function ppGoalText(code) {
+    const [domain, level, cat, num] = code.split('.')
+    const catData = PP_GOALS[domain]?.[level]?.[cat]
+    if (!catData) return code
+    const goal = catData.goals.find(g => g[0] === parseInt(num))
+    return goal ? goal[1] : code
+  }
+
+  function ppGoalBadge(code) {
+    const cspe = ppGoalCSPE(code)
+    const cls = cspe ? `badge-${cspe.toLowerCase()}` : ''
+    const tip = ppGoalText(code)
+    return `<span class="badge ${cls}" title="${tip.replace(/"/g,'&quot;')}" style="cursor:default;">${code}</span>`
+  }
+
+  // ── Current conceptual understanding — inline edit ──
+  function renderCurrentUnderstanding(rec, type) {
+    const id = rec.id
+    const val = rec.current_understanding || ''
+    const zoneId = `cu-zone-${type}-${id}`
+    if (val) {
+      return `<div class="detail-row" id="${zoneId}">
+        <div class="detail-label">Current conceptual understanding <span class="cu-edit-link" onclick="editCurrentUnderstanding('${id}','${type}')">Edit</span></div>
+        <div class="detail-val" style="font-style:italic;">${val}</div>
+      </div>`
+    }
+    return `<div class="detail-row" id="${zoneId}">
+      <div class="detail-label">Current conceptual understanding</div>
+      <textarea class="cu-edit-area" id="cu-input-${type}-${id}" placeholder="Which specific strand within this space are you pursuing with the children right now?"></textarea>
+      <div class="cu-save-row">
+        <button class="cu-save-btn" onclick="saveCurrentUnderstanding('${id}','${type}')">Save</button>
+      </div>
+    </div>`
+  }
+
+  function editCurrentUnderstanding(id, type) {
+    const list = type === 'thread' ? allThreads : allCycles
+    const rec = list.find(x => x.id === id)
+    const val = rec?.current_understanding || ''
+    const zone = document.getElementById(`cu-zone-${type}-${id}`)
+    if (!zone) return
+    zone.innerHTML = `
+      <div class="detail-label">Current conceptual understanding</div>
+      <textarea class="cu-edit-area" id="cu-input-${type}-${id}">${val}</textarea>
+      <div class="cu-save-row">
+        <button class="cu-save-btn" onclick="saveCurrentUnderstanding('${id}','${type}')">Save</button>
+        <button class="cu-cancel-btn" onclick="cancelCUEdit('${id}','${type}')">Cancel</button>
+      </div>`
+    document.getElementById(`cu-input-${type}-${id}`)?.focus()
+  }
+
+  function cancelCUEdit(id, type) {
+    const list = type === 'thread' ? allThreads : allCycles
+    const rec = list.find(x => x.id === id)
+    if (!rec) return
+    const zone = document.getElementById(`cu-zone-${type}-${id}`)
+    if (!zone) return
+    zone.outerHTML = renderCurrentUnderstanding(rec, type)
+  }
+
+  async function saveCurrentUnderstanding(id, type) {
+    const input = document.getElementById(`cu-input-${type}-${id}`)
+    if (!input) return
+    const val = input.value.trim()
+    const saveBtn = input.closest('.detail-row')?.querySelector('.cu-save-btn')
+    if (saveBtn) { saveBtn.textContent = 'Saving…'; saveBtn.disabled = true }
+
+    const table = type === 'thread' ? 'inquiry_threads' : 'investigation_cycles'
+    const { error } = await client.from(table).update({ current_understanding: val || null }).eq('id', id)
+    if (error) {
+      if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.disabled = false }
+      alert('Save failed: ' + error.message)
+      return
+    }
+    const list = type === 'thread' ? allThreads : allCycles
+    const rec = list.find(x => x.id === id)
+    if (rec) rec.current_understanding = val
+    cancelCUEdit(id, type) // re-renders from updated local state
+  }
+
+  // ── Thread / Cycle image zone ──
+  function threadImgZone(rec, type) {
+    const zoneId = `${type}-img-zone-${rec.id}`
+    const fileId = `${type}-file-${rec.id}`
+    if (rec.image_url) {
+      return `<div class="thread-img-wrap" id="${zoneId}">
+        <img src="${rec.image_url}" alt="Conceptual web" onclick="this.classList.toggle('zoomed')" />
+        <label class="thread-img-replace" for="${fileId}">↺ Replace photo
+          <input type="file" id="${fileId}" accept="image/*" style="display:none;" onchange="uploadWebImage(this,'${rec.id}','${type}')"/>
+        </label>
+      </div>`
+    }
+    return `<label class="thread-upload-zone" for="${fileId}" id="${zoneId}">
+      📎 Add conceptual web photo
+      <input type="file" id="${fileId}" accept="image/*" style="display:none;" onchange="uploadWebImage(this,'${rec.id}','${type}')"/>
+    </label>`
+  }
+
+  async function uploadWebImage(input, recordId, type) {
+    const file = input.files[0]
+    if (!file) return
+    const zoneId = `${type}-img-zone-${recordId}`
+    const fileId = `${type}-file-${recordId}`
+    const zone = document.getElementById(zoneId)
+    if (zone) zone.innerHTML = '<div style="padding:0.6rem;font-size:0.72rem;color:var(--ink-faint);font-style:italic;text-align:center;">Uploading…</div>'
+
+    const ext = file.name.split('.').pop().toLowerCase()
+    const path = `${type}-${recordId}-${Date.now()}.${ext}`
+    const { data: upData, error: upErr } = await client.storage.from('sparks').upload(path, file, { contentType: file.type })
+    if (upErr) {
+      if (zone) zone.innerHTML = `<div style="padding:0.6rem;font-size:0.72rem;color:#c0392b;text-align:center;">Upload failed: ${upErr.message}</div>`
+      return
+    }
+    const { data: { publicUrl } } = client.storage.from('sparks').getPublicUrl(upData.path)
+    const table = type === 'thread' ? 'inquiry_threads' : 'investigation_cycles'
+    const { error } = await client.from(table).update({ image_url: publicUrl }).eq('id', recordId)
+    if (error) {
+      if (zone) zone.innerHTML = `<div style="padding:0.6rem;font-size:0.72rem;color:#c0392b;text-align:center;">Save failed: ${error.message}</div>`
+      return
+    }
+    // Update local state
+    const list = type === 'thread' ? allThreads : allCycles
+    const rec = list.find(x => x.id === recordId)
+    if (rec) rec.image_url = publicUrl
+    // Swap zone to image in place
+    if (zone) {
+      zone.className = 'thread-img-wrap'
+      zone.innerHTML = `<img src="${publicUrl}" alt="Conceptual web" onclick="this.classList.toggle('zoomed')" />
+        <label class="thread-img-replace" for="${fileId}">↺ Replace photo
+          <input type="file" id="${fileId}" accept="image/*" style="display:none;" onchange="uploadWebImage(this,'${recordId}','${type}')"/>
+        </label>`
+    }
+  }
+
+  function openGoalsPanel() {
+    const body = document.getElementById('goals-body')
+    const LEVELS = ['N2','K1','K2']
+    body.innerHTML = Object.entries(PP_GOALS).map(([domKey, domData]) => {
+      // Collect all unique cat keys in order across all levels
+      const catKeys = []
+      const seen = new Set()
+      LEVELS.forEach(lvl => {
+        if (!domData[lvl]) return
+        Object.keys(domData[lvl]).forEach(cat => { if (!seen.has(cat)) { seen.add(cat); catKeys.push(cat) } })
+      })
+
+      const levelHdr = `<div class="goals-level-headers">${LEVELS.map(l => `<div class="goals-level-hd">${l}</div>`).join('')}</div>`
+
+      const catRows = catKeys.map(catKey => {
+        const meta = LEVELS.map(l => domData[l]?.[catKey]).find(Boolean)
+        if (!meta) return ''
+        const cspe = meta.cspe.toLowerCase()
+        const cells = LEVELS.map(lvl => {
+          const catData = domData[lvl]?.[catKey]
+          if (!catData) return `<div class="goals-grid-cell"></div>`
+          const rows = catData.goals.map(([n, text]) => {
+            const code = `${domKey}.${lvl}.${catKey}.${n}`
+            return `<div class="goal-row"><span class="goal-code badge badge-${cspe}">${code}</span><span class="goal-text">${text}</span></div>`
+          }).join('')
+          return `<div class="goals-grid-cell">${rows}</div>`
+        }).join('')
+        return `<div class="goals-cat-section">
+          <div class="goals-cat-hd-row">
+            <span class="goals-cat-hd-label">${meta.name}</span>
+            <span class="badge badge-${cspe}" style="font-size:0.55rem;">${meta.cspe}</span>
+          </div>
+          <div class="goals-grid-row">${cells}</div>
+        </div>`
+      }).join('')
+
+      return `<div class="goals-domain-block">
+        <div class="goals-domain-hd">${domData.label} (${domKey})</div>
+        ${levelHdr}${catRows}
+      </div>`
+    }).join('')
+    document.getElementById('goals-overlay').classList.add('open')
+  }
+
+  function closeGoalsPanel() {
+    document.getElementById('goals-overlay').classList.remove('open')
+  }
+
+  function toggleCard(id) {
+    document.getElementById(id).classList.toggle('open')
+  }
+
+  // ── Tabs ──
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById('panel-' + id).classList.add('active')
+    btn.classList.add('active')
+  }
+
+  // ── Rung filter ──
+  function filterRung(r, btn) {
+    activeRung = r
+    document.querySelectorAll('.rung-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    const fi = document.getElementById('filter-info')
+    fi.textContent = r ? `Showing Rung ${r} only` : ''
+    fi.className = r ? 'filter-info visible' : 'filter-info'
+    renderThreads()
+    renderCycles()
+  }
+
+  // ── Skills ──
+  function copySkill(card, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      card.classList.add('copied')
+      card.querySelector('.skill-hint').textContent = 'Copied!'
+      setTimeout(() => { card.classList.remove('copied'); card.querySelector('.skill-hint').textContent = 'Click to copy' }, 1800)
+    })
+  }
+
+  // ── Space Tracker ──
+  function setDefaultDate() {
+    const sgt = new Date(Date.now() + 8*60*60*1000).toISOString().split('T')[0]
+    ;['visit-date', 'spark-date'].forEach(id => {
+      const el = document.getElementById(id)
+      if (el && !el.value) el.value = sgt
+    })
+  }
+
+  function renderCoverage() {
+    const el = document.getElementById('coverage-rows')
+    if (!el) return
+    el.innerHTML = SPACES.map((s, idx) => {
+      const spaceVisits = allVisits.filter(v => v.space === s.key)
+      const uniqueVisitors = new Set(spaceVisits.map(v => v.child_code))
+      const count = uniqueVisitors.size
+      const pct = Math.round((count / TOTAL_CHILDREN) * 100)
+      const childRows = CHILDREN.map(ch => {
+        const visits = spaceVisits.filter(v => v.child_code === ch.code)
+        return { code: ch.code, count: visits.length }
+      }).sort((a,b) => a.count - b.count)
+      const tiles = childRows.map(ch => {
+        const cls = ch.count === 0 ? 'cvt zero' : ch.count <= 2 ? 'cvt low' : 'cvt good'
+        const label = ch.count === 0 ? 'none' : `${ch.count}×`
+        return `<div class="${cls}"><span class="cvt-code">${ch.code}</span><span class="cvt-num">${label}</span></div>`
+      }).join('')
+      return `
+        <div>
+          <div class="coverage-row" onclick="toggleBreakdown(${idx})">
+            <span class="coverage-space-name">${s.name}</span>
+            <div class="coverage-bar-wrap"><div class="coverage-bar-fill" style="width:${pct}%"></div></div>
+            <span class="coverage-count">${count}/${TOTAL_CHILDREN}</span>
+            <span class="coverage-chevron" id="chev-${idx}">▾</span>
+          </div>
+          <div class="breakdown-panel" id="breakdown-${idx}">
+            <div class="breakdown-grid">${tiles}</div>
+          </div>
+        </div>`
+    }).join('')
+  }
+
+  function toggleBreakdown(idx) {
+    const panel = document.getElementById(`breakdown-${idx}`)
+    const chev = document.getElementById(`chev-${idx}`)
+    const isOpen = panel.classList.contains('open')
+    panel.classList.toggle('open', !isOpen)
+    chev.style.transform = isOpen ? '' : 'rotate(180deg)'
+  }
+
+  async function logVisit() {
+    const space = document.getElementById('visit-space').value
+    const child = document.getElementById('visit-child').value
+    const date  = document.getElementById('visit-date').value
+    const obs   = document.getElementById('visit-obs').value.trim()
+    const btn   = document.getElementById('save-visit-btn')
+    const msg   = document.getElementById('save-msg')
+
+    if (!space || !child || !date) {
+      msg.style.color = '#c0392b'
+      msg.textContent = 'Please select a space, child, and date.'
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'Saving…'
+    msg.style.color = 'var(--ink-faint)'
+    msg.textContent = ''
+
+    const { error } = await client.from('space_visits').insert({
+      space, child_code: child, date_visited: date, observations: obs || null
+    })
+
+    if (error) {
+      msg.style.color = '#c0392b'
+      msg.textContent = 'Error: ' + error.message
+      btn.disabled = false
+      btn.textContent = 'Save Visit'
+      return
+    }
+
+    // Refresh visits locally
+    allVisits = await db('space_visits')
+    renderCoverage()
+
+    // Reset form (keep space + date for quick multi-entry)
+    document.getElementById('visit-child').value = ''
+    document.getElementById('visit-obs').value = ''
+
+    btn.disabled = false
+    btn.textContent = 'Save Visit'
+    msg.style.color = 'var(--accent)'
+    msg.textContent = '✓ Visit logged'
+    setTimeout(() => { msg.textContent = '' }, 2500)
+  }
+
+  // ── Brief ──
+  function copyBriefCmd(e) {
+    e.stopPropagation()
+    navigator.clipboard.writeText('run morning brief').then(() => {
+      const btn = document.getElementById('brief-gen-btn')
+      if (!btn) return
+      btn.textContent = '✓ Copied!'
+      btn.classList.add('copied')
+      setTimeout(() => { btn.textContent = 'Generate now'; btn.classList.remove('copied') }, 2000)
+    })
+  }
+
+  // ── Spark Sessions ──
+  function renderSparks() {
+    const el = document.getElementById('sparks-gallery')
+    if (!el) return
+    document.getElementById('tc-sparks').textContent = allSparks.length
+
+    if (!allSparks.length) {
+      el.innerHTML = '<div class="spark-no-results">No Spark sessions logged yet. Use the form above to add your first one.</div>'
+      return
+    }
+
+    const q = (document.getElementById('spark-search')?.value || '').toLowerCase().trim()
+    const rungF = document.getElementById('spark-filter-rung')?.value || ''
+
+    const filtered = allSparks.filter(s => {
+      if (rungF && s.ladder_rung !== rungF) return false
+      if (q) {
+        const hay = [s.provocation, s.notes, s.connected_to, s.ladder_rung].filter(Boolean).join(' ').toLowerCase()
+        if (!hay.includes(q)) return false
+      }
+      return true
+    })
+
+    if (!filtered.length) {
+      el.innerHTML = '<div class="spark-no-results">No sessions match your filters.</div>'
+      return
+    }
+
+    // Group by month (YYYY-MM key, most recent first)
+    const groups = {}
+    filtered.forEach(s => {
+      const d = new Date(s.date_logged)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      if (!groups[key]) {
+        groups[key] = {
+          label: d.toLocaleDateString('en-SG', { month: 'long', year: 'numeric' }),
+          sessions: []
+        }
+      }
+      groups[key].sessions.push(s)
+    })
+
+    const keys = Object.keys(groups).sort().reverse()
+
+    el.innerHTML = keys.map((key, gi) => {
+      const { label, sessions } = groups[key]
+      const isFirst = gi === 0
+      return `<div class="spark-month-group${isFirst ? '' : ' collapsed'}" id="smg-${key}">
+        <div class="spark-month-hd" onclick="toggleSparkMonth('${key}')">
+          <span class="spark-month-label">${label}</span>
+          <span class="spark-month-count">${sessions.length} session${sessions.length !== 1 ? 's' : ''}</span>
+          <span class="spark-month-chevron">▼</span>
+        </div>
+        <div class="spark-month-grid">
+          ${sessions.map(s => {
+            const origIdx = allSparks.indexOf(s)
+            const rungLabel = s.ladder_rung || ''
+            const imgHtml = s.image_url
+              ? `<div class="spark-img-wrap"><img class="spark-img-photo" src="${s.image_url}" alt="Spark mindmap"/></div>`
+              : `<div class="spark-img-wrap"><div class="spark-no-img">🗺️</div></div>`
+            return `<div class="spark-card" id="sc-${origIdx}" onclick="expandSpark(${origIdx})">
+              ${imgHtml}
+              <div class="spark-card-body">
+                <div class="spark-badges">
+                  <span class="badge badge-date">${fmt(s.date_logged)}</span>
+                  ${rungLabel ? `<span class="badge badge-rung">${rungLabel}</span>` : ''}
+                  ${s.connected_to ? `<span class="badge badge-space">${s.connected_to}</span>` : ''}
+                </div>
+                <div class="spark-prov">"${s.provocation}"</div>
+                ${s.notes ? `<div class="spark-notes-text">${s.notes}</div>` : ''}
+              </div>
+            </div>`
+          }).join('')}
+        </div>
+      </div>`
+    }).join('')
+  }
+
+  function expandSpark(i) {
+    document.getElementById(`sc-${i}`)?.classList.toggle('open')
+  }
+
+  function toggleSparkMonth(key) {
+    document.getElementById(`smg-${key}`)?.classList.toggle('collapsed')
+  }
+
+  function clearSparkFilters() {
+    const s = document.getElementById('spark-search')
+    const r = document.getElementById('spark-filter-rung')
+    if (s) s.value = ''
+    if (r) r.value = ''
+    renderSparks()
+  }
+
+  function handleImageSelect(input) {
+    const file = input.files[0]
+    if (!file) return
+    const preview = document.getElementById('spark-preview')
+    const reader = new FileReader()
+    reader.onload = e => {
+      preview.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:110px;object-fit:cover;border-radius:7px;margin-top:6px;"/>`
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function logSpark() {
+    const date  = document.getElementById('spark-date').value
+    const prov  = document.getElementById('spark-prov').value.trim()
+    const conn  = document.getElementById('spark-conn').value.trim()
+    const rung  = document.getElementById('spark-rung').value
+    const notes = document.getElementById('spark-notes-input').value.trim()
+    const file  = document.getElementById('spark-image').files[0]
+    const btn   = document.getElementById('spark-save-btn')
+    const msg   = document.getElementById('spark-save-msg')
+
+    if (!date || !prov) {
+      msg.style.color = '#c0392b'
+      msg.textContent = 'Please add a date and provocation.'
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'Saving…'
+    msg.textContent = ''
+
+    let imageUrl = null
+    if (file) {
+      const ext  = file.name.split('.').pop().toLowerCase()
+      const path = `spark-${date}-${Date.now()}.${ext}`
+      const { data: upData, error: upErr } = await client.storage
+        .from('sparks').upload(path, file, { contentType: file.type })
+      if (!upErr) {
+        const { data: { publicUrl } } = client.storage.from('sparks').getPublicUrl(upData.path)
+        imageUrl = publicUrl
+      }
+    }
+
+    const { error } = await client.from('sparks').insert({
+      date_logged: date, provocation: prov,
+      connected_to: conn || null, ladder_rung: rung || null,
+      image_url: imageUrl, notes: notes || null
+    })
+
+    if (error) {
+      msg.style.color = '#c0392b'
+      msg.textContent = 'Error: ' + error.message
+      btn.disabled = false; btn.textContent = 'Save Spark'
+      return
+    }
+
+    const { data: sp } = await client.from('sparks').select('*').order('date_logged', { ascending: false })
+    allSparks = sp || []
+    renderSparks()
+
+    document.getElementById('spark-prov').value = ''
+    document.getElementById('spark-conn').value = ''
+    document.getElementById('spark-rung').value = ''
+    document.getElementById('spark-notes-input').value = ''
+    document.getElementById('spark-image').value = ''
+    document.getElementById('spark-preview').innerHTML = ''
+
+    btn.disabled = false; btn.textContent = 'Save Spark'
+    msg.style.color = 'var(--accent)'
+    msg.textContent = '✓ Spark logged'
+    setTimeout(() => { msg.textContent = '' }, 2500)
+  }
+
+  // ── Hamburger ──
+  function toggleSidebar() {
+    const sidebar  = document.querySelector('.sidebar')
+    const overlay  = document.getElementById('sidebar-overlay')
+    const burger   = document.getElementById('hamburger')
+    const isOpen   = sidebar.classList.contains('mobile-open')
+    sidebar.classList.toggle('mobile-open', !isOpen)
+    overlay.classList.toggle('visible', !isOpen)
+    burger.classList.toggle('open', !isOpen)
+  }
+
+  // Close sidebar when a tab is clicked on mobile
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 700) {
+        document.querySelector('.sidebar').classList.remove('mobile-open')
+        document.getElementById('sidebar-overlay').classList.remove('visible')
+        document.getElementById('hamburger').classList.remove('open')
+      }
+    })
+  })
+
+  // ── Init ──
+  loadAll()
+</script>
+</body>
+</html>
