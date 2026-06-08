@@ -412,6 +412,62 @@
     .cvt.zero .cvt-num { color: #c0392b; font-weight: 600; }
     .cvt.low .cvt-num { color: var(--gold); font-weight: 600; }
     .cvt.good .cvt-num { color: var(--accent); }
+
+    /* ── Readings tab ── */
+    .readings-toolbar { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 1rem; }
+    .readings-add-toggle { font-family: inherit; font-size: 0.73rem; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--ink-faint); padding: 0.32rem 0.85rem; cursor: pointer; transition: all var(--transition); }
+    .readings-add-toggle:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .readings-add-form { background: var(--card); border: 1.5px solid var(--accent); border-radius: 12px; padding: 1.1rem 1.2rem 1rem; margin-bottom: 1.25rem; display: none; }
+    .readings-add-form.open { display: block; }
+    .readings-add-title { font-family: 'DM Serif Display', serif; font-size: 0.95rem; font-weight: 400; color: var(--ink); margin-bottom: 0.85rem; }
+    .readings-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+    .readings-form-field { display: flex; flex-direction: column; gap: 0.2rem; }
+    .readings-form-field.full { grid-column: 1 / -1; }
+    .readings-form-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); font-weight: 500; }
+    .readings-form-input { font-family: inherit; font-size: 0.78rem; padding: 0.38rem 0.6rem; border: 1px solid var(--border); border-radius: 7px; background: var(--warm-white); color: var(--ink); outline: none; width: 100%; box-sizing: border-box; }
+    .readings-form-input:focus { border-color: var(--accent); }
+    .readings-form-textarea { font-family: inherit; font-size: 0.78rem; padding: 0.42rem 0.6rem; border: 1px solid var(--border); border-radius: 7px; background: var(--warm-white); color: var(--ink); outline: none; resize: vertical; min-height: 72px; width: 100%; box-sizing: border-box; line-height: 1.5; }
+    .readings-form-textarea:focus { border-color: var(--accent); }
+    .readings-save-btn { font-family: inherit; font-size: 0.78rem; background: var(--accent); color: #fff; border: none; border-radius: 7px; padding: 0.42rem 1.1rem; cursor: pointer; transition: background var(--transition); }
+    .readings-save-btn:hover { background: var(--accent-mid); }
+    .readings-save-btn:disabled { background: var(--border); color: var(--ink-faint); cursor: not-allowed; }
+    .readings-save-msg { font-size: 0.7rem; min-height: 1em; }
+    /* Current reading card */
+    .reading-current-card { background: var(--card); border: 1.5px solid var(--accent); border-radius: 14px; overflow: hidden; margin-bottom: 1.25rem; }
+    .reading-current-hd { background: var(--accent-light); border-bottom: 1px solid var(--accent); padding: 0.65rem 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+    .reading-current-label { font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+    .reading-week-label { font-size: 0.68rem; color: var(--accent); opacity: 0.75; }
+    .reading-current-body { padding: 1.2rem 1.2rem 0; }
+    .reading-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.1rem; font-weight: 400; color: var(--ink); line-height: 1.35; margin-bottom: 0.28rem; }
+    .reading-authors { font-size: 0.75rem; color: var(--ink-light); margin-bottom: 0.1rem; }
+    .reading-source-line { font-size: 0.7rem; color: var(--ink-faint); font-style: italic; margin-bottom: 1rem; }
+    .reading-source-line a { color: var(--accent); text-decoration: none; }
+    .reading-source-line a:hover { text-decoration: underline; }
+    .reading-section { margin-bottom: 0.85rem; }
+    .reading-section-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); font-weight: 600; margin-bottom: 0.22rem; }
+    .reading-section-body { font-size: 0.79rem; color: var(--ink-light); line-height: 1.62; }
+    .reading-question { font-size: 0.82rem; color: var(--ink); line-height: 1.6; font-style: italic; border-left: 3px solid var(--accent); padding-left: 0.8rem; }
+    .reading-reflection-zone { background: var(--warm-white); border-top: 1px solid var(--border); padding: 1rem 1.2rem 1.1rem; }
+    .reading-refl-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .badge-reflected { background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent); font-size: 0.6rem; padding: 0.08rem 0.45rem; border-radius: 999px; font-weight: 500; letter-spacing: 0.03em; text-transform: none; }
+    .reading-refl-textarea { font-family: inherit; font-size: 0.8rem; padding: 0.48rem 0.65rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--ink); resize: vertical; min-height: 78px; width: 100%; box-sizing: border-box; outline: none; line-height: 1.5; }
+    .reading-refl-textarea:focus { border-color: var(--accent); }
+    .reading-refl-save-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.45rem; }
+    /* Past readings */
+    .readings-past-hd { font-size: 0.63rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 0.65rem; margin-top: 0.25rem; }
+    .reading-past-item { background: var(--card); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; margin-bottom: 0.6rem; }
+    .reading-past-toggle { width: 100%; display: flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1rem; cursor: pointer; background: none; border: none; text-align: left; font-family: inherit; transition: background var(--transition); }
+    .reading-past-toggle:hover { background: var(--cream); }
+    .reading-past-info { flex: 1; }
+    .reading-past-title { font-size: 0.82rem; font-weight: 500; color: var(--ink); line-height: 1.35; }
+    .reading-past-meta { font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.1rem; }
+    .reading-past-chevron { font-size: 0.6rem; color: var(--ink-faint); transition: transform 0.2s ease; flex-shrink: 0; }
+    .reading-past-item.open .reading-past-chevron { transform: rotate(180deg); }
+    .reading-past-body { display: none; padding: 0.85rem 1rem 1rem; border-top: 1px solid var(--border); }
+    .reading-past-item.open .reading-past-body { display: block; }
+    .reading-past-refl { background: var(--accent-light); border-radius: 7px; padding: 0.6rem 0.8rem; font-size: 0.78rem; color: var(--accent-mid); line-height: 1.55; font-style: italic; margin-top: 0.75rem; }
+    .reading-past-refl-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-weight: 600; margin-bottom: 0.3rem; }
+    .reading-no-refl { font-size: 0.75rem; color: var(--ink-faint); font-style: italic; margin-top: 0.75rem; }
   </style>
 </head>
 <body>
@@ -482,9 +538,9 @@
         <button class="tab-btn" onclick="switchTab('spark',this)">Spark <span class="tab-count" id="tc-sparks">–</span></button>
         <button class="tab-btn" onclick="switchTab('threads',this)">Inquiry Threads <span class="tab-count" id="tc-threads">–</span></button>
         <button class="tab-btn" onclick="switchTab('investigations',this)">Investigations <span class="tab-count" id="tc-cycles">–</span></button>
-        <button class="tab-btn" onclick="switchTab('carenotes',this)">Care Notes <span class="tab-count" id="tc-care">–</span></button>
         <button class="tab-btn" onclick="switchTab('tracker',this)">Space Tracker</button>
-        <button class="tab-btn" onclick="switchTab('skills',this)">Skills</button>
+        <button class="tab-btn" onclick="switchTab('carenotes',this)">Care Notes <span class="tab-count" id="tc-care">–</span></button>
+        <button class="tab-btn" onclick="switchTab('readings',this)">Readings</button>
       </div>
       <span class="filter-info" id="filter-info"></span>
     </div>
@@ -673,21 +729,9 @@
 
     </div>
 
-    <!-- Skills -->
-    <div class="tab-panel" id="panel-skills">
-      <div style="font-size:0.73rem; color:var(--ink-faint); margin-bottom:0.75rem;">Click any skill to copy the trigger phrase.</div>
-      <div class="skills-grid">
-        <div class="skill-card" onclick="copySkill(this,'log discussion')"><div class="skill-cmd">log discussion</div><div class="skill-desc">Log today's Spark session to the discussions log.</div><div class="skill-hint">Click to copy</div></div>
-        <div class="skill-card" onclick="copySkill(this,'log observation')"><div class="skill-cmd">log observation</div><div class="skill-desc">Process a raw obs file into a structured inquiry thread entry.</div><div class="skill-hint">Click to copy</div></div>
-        <div class="skill-card" onclick="copySkill(this,'log cycle')"><div class="skill-cmd">log cycle</div><div class="skill-desc">Process a week note into a cycle record and showcase tracker entry.</div><div class="skill-hint">Click to copy</div></div>
-        <div class="skill-card" onclick="copySkill(this,'extend [space name]')"><div class="skill-cmd">extend [space name]</div><div class="skill-desc">Get the next conceptual move for a named space.</div><div class="skill-hint">Click to copy</div></div>
-        <div class="skill-card" onclick="copySkill(this,'log care note for [child code]')"><div class="skill-cmd">log care note for [child code]</div><div class="skill-desc">Individual support and observation log with reference library.</div><div class="skill-hint">Click to copy</div></div>
-        <div class="skill-card" onclick="copySkill(this,'show me care notes for [child code]')"><div class="skill-cmd">show me care notes for [child code]</div><div class="skill-desc">Retrieve and synthesise the full care log for a child.</div><div class="skill-hint">Click to copy</div></div>
-        <div class="skill-card" onclick="copySkill(this,'find this week\'s ECE reading')"><div class="skill-cmd">find this week's ECE reading</div><div class="skill-desc">Run saturday-research on demand.</div><div class="skill-hint">Click to copy</div></div>
-        <div class="skill-card" onclick="copySkill(this,'refresh dashboard')"><div class="skill-cmd">refresh dashboard</div><div class="skill-desc">Sync local JSON files to Supabase and reload live data.</div><div class="skill-hint">Click to copy</div></div>
-        <div class="skill-card" onclick="openGoalsPanel()"><div class="skill-cmd">PP Goals reference</div><div class="skill-desc">Open the full DOW / LL / NUM goals panel with CSPE codes.</div><div class="skill-hint">Click to open</div></div>
-        <div class="skill-card" onclick="copySkill(this,'suggest PP goals for: &quot;[paste current conceptual understanding]&quot;')"><div class="skill-cmd">suggest PP goals for: "…"</div><div class="skill-desc">Paste a current conceptual understanding — returns one goal per level (N2 / K1 / K2) showing the progression across the class.</div><div class="skill-hint">Click to copy</div></div>
-      </div>
+    <!-- Readings -->
+    <div class="tab-panel" id="panel-readings">
+      <div id="readings-container"><div class="loading"><span class="spinner"></span>Loading readings…</div></div>
     </div>
   </main>
 </div>
@@ -754,7 +798,7 @@
   }
 
   // ── State ──
-  let allThreads = [], allCycles = [], allCareNotes = [], allVisits = [], allSparks = []
+  let allThreads = [], allCycles = [], allCareNotes = [], allVisits = [], allSparks = [], allReadings = []
   let watching = new Set()
   let activeRung = 0
 
@@ -769,6 +813,8 @@
       ])
       const { data: sp } = await client.from('sparks').select('*').order('date_logged', { ascending: false })
       allSparks = sp || []
+      const { data: rd } = await client.from('readings').select('*').order('week_start', { ascending: false })
+      allReadings = rd || []
 
       const weekStart = getWeekStart()
       const { data: wn } = await client.from('week_notes').select('*').eq('week_start', weekStart).limit(1)
@@ -807,6 +853,7 @@
     renderPulse()
     renderEdges()
     renderSparks()
+    renderReadings()
     setDefaultDate()
   }
 
@@ -1882,6 +1929,220 @@
     msg.style.color = 'var(--accent)'
     msg.textContent = '✓ Spark logged'
     setTimeout(() => { msg.textContent = '' }, 2500)
+  }
+
+  // ── Readings ──
+  function escHtml(s) {
+    if (!s) return ''
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  }
+
+  function fmtWeek(dateStr) {
+    if (!dateStr) return '—'
+    const d = new Date(dateStr + 'T00:00:00')
+    return 'Week of ' + d.toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
+  function renderReadings() {
+    const el = document.getElementById('readings-container')
+    if (!el) return
+    const today = sgtToday()
+    const current = allReadings.find(r => r.week_start <= today) || null
+    const past = allReadings.filter(r => r !== current)
+
+    let html = `<div class="readings-toolbar">
+      <button class="readings-add-toggle" onclick="toggleAddReadingForm()">+ Add reading</button>
+    </div>
+    <div class="readings-add-form" id="readings-add-form">
+      <div class="readings-add-title">Add a reading</div>
+      <div class="readings-form-grid">
+        <div class="readings-form-field">
+          <label class="readings-form-label">Week of (date)</label>
+          <input class="readings-form-input" type="date" id="rf-week-start"/>
+        </div>
+        <div class="readings-form-field">
+          <label class="readings-form-label">Authors</label>
+          <input class="readings-form-input" type="text" id="rf-authors" placeholder="e.g. Smith, J. &amp; Lee, A."/>
+        </div>
+        <div class="readings-form-field full">
+          <label class="readings-form-label">Title</label>
+          <input class="readings-form-input" type="text" id="rf-title" placeholder="Full article or book title"/>
+        </div>
+        <div class="readings-form-field full">
+          <label class="readings-form-label">Source <span style="font-weight:300;text-transform:none;letter-spacing:0;">(journal, year)</span></label>
+          <input class="readings-form-input" type="text" id="rf-source" placeholder="e.g. Early Childhood Education Journal, 2025"/>
+        </div>
+        <div class="readings-form-field full">
+          <label class="readings-form-label">URL <span style="font-weight:300;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <input class="readings-form-input" type="text" id="rf-url" placeholder="https://…"/>
+        </div>
+        <div class="readings-form-field full">
+          <label class="readings-form-label">Key argument</label>
+          <textarea class="readings-form-textarea" id="rf-key-arg" placeholder="What is the central claim or finding?"></textarea>
+        </div>
+        <div class="readings-form-field full">
+          <label class="readings-form-label">Connection to practice</label>
+          <textarea class="readings-form-textarea" id="rf-connection" placeholder="How does this connect to what you are doing at Pebble Place?"></textarea>
+        </div>
+        <div class="readings-form-field full">
+          <label class="readings-form-label">One question it raises</label>
+          <textarea class="readings-form-textarea" id="rf-question" placeholder="What question does this leave you with?"></textarea>
+        </div>
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:0.6rem;margin-top:0.3rem;">
+          <button class="readings-save-btn" id="rf-save-btn" onclick="saveNewReading()">Save reading</button>
+          <span class="readings-save-msg" id="rf-save-msg"></span>
+        </div>
+      </div>
+    </div>`
+
+    if (current) {
+      const hasRefl = !!current.reflection
+      html += `<div class="reading-current-card">
+        <div class="reading-current-hd">
+          <span class="reading-current-label">Reading of the week</span>
+          <span class="reading-week-label">${fmtWeek(current.week_start)}</span>
+        </div>
+        <div class="reading-current-body">
+          <div class="reading-title">${escHtml(current.title)}</div>
+          <div class="reading-authors">${escHtml(current.authors)}</div>
+          <div class="reading-source-line">${escHtml(current.source_full)}${current.url ? ` &nbsp;—&nbsp; <a href="${current.url}" target="_blank" rel="noopener">Read →</a>` : ''}</div>
+          <div class="reading-section">
+            <div class="reading-section-label">Key argument</div>
+            <div class="reading-section-body">${escHtml(current.key_argument)}</div>
+          </div>
+          <div class="reading-section">
+            <div class="reading-section-label">Connection to practice</div>
+            <div class="reading-section-body">${escHtml(current.connection_to_practice)}</div>
+          </div>
+          <div class="reading-section">
+            <div class="reading-section-label">One question it raises</div>
+            <div class="reading-question">${escHtml(current.one_question)}</div>
+          </div>
+        </div>
+        <div class="reading-reflection-zone">
+          <div class="reading-refl-label">
+            Your reflection
+            ${hasRefl ? '<span class="badge-reflected">Reflected ✓</span>' : ''}
+          </div>
+          <textarea class="reading-refl-textarea" id="refl-${current.id}" placeholder="What does this mean for your practice right now? What will you do differently, notice more, or carry with you this week?">${hasRefl ? escHtml(current.reflection) : ''}</textarea>
+          <div class="reading-refl-save-row">
+            <button class="readings-save-btn" id="refl-btn-${current.id}" onclick="saveReflection('${current.id}')">Save reflection</button>
+            <span class="readings-save-msg" id="refl-msg-${current.id}"></span>
+          </div>
+        </div>
+      </div>`
+    } else {
+      html += `<div class="empty-card">No reading logged yet. Use the "Add reading" button above.</div>`
+    }
+
+    if (past.length) {
+      html += `<div class="readings-past-hd">Past readings</div>`
+      html += past.map(r => {
+        const hasRefl = !!r.reflection
+        return `<div class="reading-past-item" id="rpi-${r.id}">
+          <button class="reading-past-toggle" onclick="togglePastReading('${r.id}')">
+            <div class="reading-past-info">
+              <div class="reading-past-title">${escHtml(r.title)}</div>
+              <div class="reading-past-meta">${fmtWeek(r.week_start)} &nbsp;·&nbsp; ${escHtml(r.authors)}</div>
+            </div>
+            ${hasRefl ? '<span class="badge-reflected" style="font-size:0.58rem;flex-shrink:0;">Reflected ✓</span>' : ''}
+            <span class="reading-past-chevron">▼</span>
+          </button>
+          <div class="reading-past-body">
+            <div class="reading-source-line" style="margin-bottom:0.75rem;">${escHtml(r.source_full)}${r.url ? ` &nbsp;—&nbsp; <a href="${r.url}" target="_blank" rel="noopener">Read →</a>` : ''}</div>
+            <div class="reading-section">
+              <div class="reading-section-label">Key argument</div>
+              <div class="reading-section-body">${escHtml(r.key_argument)}</div>
+            </div>
+            <div class="reading-section">
+              <div class="reading-section-label">Connection to practice</div>
+              <div class="reading-section-body">${escHtml(r.connection_to_practice)}</div>
+            </div>
+            <div class="reading-section">
+              <div class="reading-section-label">One question it raises</div>
+              <div class="reading-question">${escHtml(r.one_question)}</div>
+            </div>
+            ${hasRefl
+              ? `<div class="reading-past-refl"><div class="reading-past-refl-label">Your reflection</div>${escHtml(r.reflection)}</div>`
+              : `<div class="reading-no-refl">No reflection saved for this reading.</div>`}
+          </div>
+        </div>`
+      }).join('')
+    }
+
+    el.innerHTML = html
+
+    // Set default date for add form
+    const weekStartEl = document.getElementById('rf-week-start')
+    if (weekStartEl && !weekStartEl.value) weekStartEl.value = sgtToday()
+  }
+
+  function toggleAddReadingForm() {
+    document.getElementById('readings-add-form')?.classList.toggle('open')
+  }
+
+  function togglePastReading(id) {
+    document.getElementById(`rpi-${id}`)?.classList.toggle('open')
+  }
+
+  async function saveReflection(id) {
+    const ta  = document.getElementById(`refl-${id}`)
+    const btn = document.getElementById(`refl-btn-${id}`)
+    const msg = document.getElementById(`refl-msg-${id}`)
+    if (!ta) return
+    const val = ta.value.trim()
+    if (!val) { msg.style.color='#c0392b'; msg.textContent='Please write something first.'; return }
+    btn.disabled = true; btn.textContent = 'Saving…'; msg.textContent = ''
+    const { error } = await client.from('readings').update({ reflection: val }).eq('id', id)
+    if (error) {
+      btn.disabled = false; btn.textContent = 'Save reflection'
+      msg.style.color = '#c0392b'; msg.textContent = 'Save failed: ' + error.message
+      return
+    }
+    const rec = allReadings.find(r => String(r.id) === String(id))
+    if (rec) rec.reflection = val
+    btn.disabled = false; btn.textContent = 'Save reflection'
+    msg.style.color = 'var(--accent)'; msg.textContent = 'Saved ✓'
+    setTimeout(() => { msg.textContent = ''; renderReadings() }, 1500)
+  }
+
+  async function saveNewReading() {
+    const weekStart  = document.getElementById('rf-week-start')?.value
+    const title      = document.getElementById('rf-title')?.value.trim()
+    const authors    = document.getElementById('rf-authors')?.value.trim()
+    const source     = document.getElementById('rf-source')?.value.trim()
+    const url        = document.getElementById('rf-url')?.value.trim()
+    const keyArg     = document.getElementById('rf-key-arg')?.value.trim()
+    const connection = document.getElementById('rf-connection')?.value.trim()
+    const question   = document.getElementById('rf-question')?.value.trim()
+    const btn        = document.getElementById('rf-save-btn')
+    const msg        = document.getElementById('rf-save-msg')
+
+    if (!weekStart || !title || !authors || !keyArg) {
+      msg.style.color = '#c0392b'; msg.textContent = 'Date, title, authors, and key argument are required.'
+      return
+    }
+    btn.disabled = true; btn.textContent = 'Saving…'; msg.textContent = ''
+
+    const { error } = await client.from('readings').insert({
+      week_start: weekStart, title, authors,
+      source_full: source || null, url: url || null,
+      key_argument: keyArg,
+      connection_to_practice: connection || null,
+      one_question: question || null
+    })
+
+    if (error) {
+      btn.disabled = false; btn.textContent = 'Save reading'
+      msg.style.color = '#c0392b'; msg.textContent = 'Save failed: ' + error.message
+      return
+    }
+
+    const { data: rd } = await client.from('readings').select('*').order('week_start', { ascending: false })
+    allReadings = rd || []
+    btn.disabled = false; btn.textContent = 'Save reading'
+    msg.style.color = 'var(--accent)'; msg.textContent = 'Saved ✓'
+    setTimeout(() => { msg.textContent = ''; renderReadings() }, 1200)
   }
 
   // ── Hamburger ──
