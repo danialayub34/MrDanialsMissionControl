@@ -413,6 +413,36 @@
     .cvt.low .cvt-num { color: var(--gold); font-weight: 600; }
     .cvt.good .cvt-num { color: var(--accent); }
 
+    /* ── Space Tracker — diversity watch ── */
+    .diversity-card { background: var(--card); border: 1px solid #f0c8ae; border-radius: 12px; overflow: hidden; margin-bottom: 1.1rem; }
+    .diversity-hd { padding: 0.7rem 1.2rem; border-bottom: 1px solid #f0c8ae; background: #fce8dc; display: flex; align-items: center; gap: 0.5rem; }
+    .diversity-hd-label { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: #9a5430; }
+    .diversity-hd-sub { font-size: 0.65rem; color: #b06040; }
+    .diversity-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.58rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .diversity-row:last-child { border-bottom: none; }
+    .diversity-child { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.73rem; font-weight: 500; min-width: 72px; color: var(--ink); }
+    .diversity-flag { font-size: 0.73rem; color: var(--ink-light); line-height: 1.4; }
+    .diversity-flag strong { color: #9a5430; font-weight: 500; }
+    .diversity-pct { font-size: 0.65rem; color: var(--ink-faint); margin-left: auto; flex-shrink: 0; }
+    /* Space Tracker — visit archive ── */
+    .archive-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 1.1rem; }
+    .archive-hd { padding: 0.85rem 1.2rem; border-bottom: 1px solid var(--border); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); font-weight: 600; }
+    .archive-day { border-bottom: 1px solid var(--border); }
+    .archive-day:last-child { border-bottom: none; }
+    .archive-day-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.62rem 1.2rem; cursor: pointer; width: 100%; background: none; border: none; text-align: left; font-family: inherit; transition: background var(--transition); }
+    .archive-day-btn:hover { background: var(--cream); }
+    .archive-day-date { font-size: 0.75rem; font-weight: 500; color: var(--ink); flex: 1; }
+    .archive-day-count { font-size: 0.65rem; color: var(--ink-faint); background: var(--cream); border: 1px solid var(--border); border-radius: 10px; padding: 0.06rem 0.42rem; }
+    .archive-day-chev { font-size: 0.58rem; color: var(--ink-faint); transition: transform 0.2s ease; }
+    .archive-day.open .archive-day-chev { transform: rotate(180deg); }
+    .archive-visits { display: none; padding: 0.45rem 1.2rem 0.6rem; }
+    .archive-day.open .archive-visits { display: block; }
+    .archive-visit-row { display: flex; align-items: baseline; gap: 0.55rem; padding: 0.26rem 0; border-bottom: 1px solid var(--border); font-size: 0.73rem; }
+    .archive-visit-row:last-child { border-bottom: none; }
+    .archive-visit-child { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.7rem; font-weight: 500; color: var(--ink); min-width: 72px; flex-shrink: 0; }
+    .archive-visit-space { color: var(--ink-light); flex: 1; }
+    .archive-visit-obs { font-size: 0.67rem; color: var(--ink-faint); font-style: italic; }
+
     /* ── Readings tab ── */
     .readings-toolbar { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 1rem; }
     .readings-add-toggle { font-family: inherit; font-size: 0.73rem; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--ink-faint); padding: 0.32rem 0.85rem; cursor: pointer; transition: all var(--transition); }
@@ -722,10 +752,14 @@
         <div class="save-msg" id="save-msg"></div>
       </div>
 
+      <div id="diversity-watch"></div>
+
       <div class="coverage-card" id="coverage-card">
         <div class="coverage-header">Space Coverage — all 14 children</div>
         <div id="coverage-rows"><div class="loading"><span class="spinner"></span>Loading…</div></div>
       </div>
+
+      <div id="visit-archive"></div>
 
     </div>
 
@@ -850,6 +884,8 @@
     renderCycles()
     renderCareNotes()
     renderCoverage()
+    renderDiversityWatch()
+    renderVisitArchive()
     renderPulse()
     renderEdges()
     renderSparks()
@@ -900,27 +936,35 @@
     const el = document.getElementById('edges-card')
     if (!el) return
     const edges = []
-    // 1. Most under-visited space
-    const ranked = SPACES.map(s => {
-      const unique = new Set(allVisits.filter(v => v.space === s.key).map(v => v.child_code)).size
-      return { name: s.name, unique }
-    }).sort((a,b) => a.unique - b.unique)
-    const least = ranked[0]
-    if (least.unique < TOTAL_CHILDREN) {
-      edges.push(`<strong>${least.name}</strong> — ${least.unique === 0 ? 'no children have visited yet' : `only ${least.unique} of ${TOTAL_CHILDREN} children visited`}`)
+    const all = [...allThreads, ...allCycles]
+
+    // 1. Missing conceptual understanding
+    const noUnderstanding = all.filter(x => !x.current_understanding)
+    if (noUnderstanding.length > 0) {
+      const names = noUnderstanding.slice(0,2).map(x =>
+        x.investigation_name ? x.investigation_name.split('—')[0].trim() : spaceName(x.space)
+      )
+      const extra = noUnderstanding.length > 2 ? ` + ${noUnderstanding.length - 2} more` : ''
+      edges.push(`<strong>${names.join(', ')}${extra}</strong> — conceptual understanding not yet logged`)
     }
-    // 2. Spaces with no active thread
+
+    // 2. Missing conceptual web photo
+    const noWeb = all.filter(x => !x.image_url)
+    if (noWeb.length > 0) {
+      const names = noWeb.slice(0,2).map(x =>
+        x.investigation_name ? x.investigation_name.split('—')[0].trim() : spaceName(x.space)
+      )
+      const extra = noWeb.length > 2 ? ` + ${noWeb.length - 2} more` : ''
+      edges.push(`<strong>${names.join(', ')}${extra}</strong> — no conceptual web uploaded`)
+    }
+
+    // 3. Living inquiry space with no active thread
     const withThreads = new Set(allThreads.map(t => t.space))
     const noThread = SPACES.filter(s => s.type === 'Living inquiry' && !withThreads.has(s.key))
     if (noThread.length > 0) edges.push(`<strong>${noThread[0].name}</strong> has no active inquiry thread`)
-    // 3. Last observation logged
-    if (allThreads.length > 0) {
-      const latest = allThreads.reduce((a,b) => new Date(a.date_logged) > new Date(b.date_logged) ? a : b)
-      const days = Math.round((Date.now() + 8*60*60*1000 - new Date(latest.date_logged+'T00:00:00').getTime()) / (1000*60*60*24))
-      if (days > 5) edges.push(`Last observation logged <strong>${days} days ago</strong>`)
-    }
+
     if (edges.length === 0) {
-      el.innerHTML = '<div class="edge-row"><div class="edge-dot" style="background:var(--accent)"></div><div class="edge-text">All spaces active and covered — well done.</div></div>'
+      el.innerHTML = '<div class="edge-row"><div class="edge-dot" style="background:var(--accent)"></div><div class="edge-text">All spaces have conceptual webs and understandings logged — well done.</div></div>'
       return
     }
     el.innerHTML = edges.slice(0,3).map(e => `<div class="edge-row"><div class="edge-dot"></div><div class="edge-text">${e}</div></div>`).join('')
@@ -1666,6 +1710,82 @@
     })
   }
 
+  function renderDiversityWatch() {
+    const el = document.getElementById('diversity-watch')
+    if (!el) return
+    if (!allVisits.length) { el.innerHTML = ''; return }
+
+    const childVisits = {}
+    allVisits.forEach(v => {
+      if (!childVisits[v.child_code]) childVisits[v.child_code] = {}
+      childVisits[v.child_code][v.space] = (childVisits[v.child_code][v.space] || 0) + 1
+    })
+
+    const flags = []
+    Object.entries(childVisits).forEach(([code, spaces]) => {
+      const total = Object.values(spaces).reduce((a,b) => a+b, 0)
+      if (total < 3) return
+      const [topSpace, topCount] = Object.entries(spaces).sort((a,b) => b[1]-a[1])[0]
+      const pct = topCount / total
+      if (pct >= 0.6) flags.push({ code, space: spaceName(topSpace), visits: topCount, total, pct: Math.round(pct*100) })
+    })
+
+    if (!flags.length) { el.innerHTML = ''; return }
+
+    el.innerHTML = `<div class="diversity-card">
+      <div class="diversity-hd">
+        <span class="diversity-hd-label">Diversity watch</span>
+        <span class="diversity-hd-sub">— children concentrated at one space</span>
+      </div>
+      ${flags.map(f => `<div class="diversity-row">
+        <span class="diversity-child">${f.code}</span>
+        <span class="diversity-flag">${f.visits} of ${f.total} visits at <strong>${f.space}</strong></span>
+        <span class="diversity-pct">${f.pct}%</span>
+      </div>`).join('')}
+    </div>`
+  }
+
+  function renderVisitArchive() {
+    const el = document.getElementById('visit-archive')
+    if (!el) return
+    if (!allVisits.length) {
+      el.innerHTML = '<div style="font-size:0.77rem;color:var(--ink-faint);font-style:italic;padding:0.5rem 0;">No visits logged yet.</div>'
+      return
+    }
+
+    const byDate = {}
+    allVisits.forEach(v => {
+      if (!byDate[v.date_visited]) byDate[v.date_visited] = []
+      byDate[v.date_visited].push(v)
+    })
+    const sortedDates = Object.keys(byDate).sort().reverse()
+
+    el.innerHTML = `<div class="archive-card">
+      <div class="archive-hd">Visit log</div>
+      ${sortedDates.map((date, i) => {
+        const visits = byDate[date]
+        return `<div class="archive-day${i === 0 ? ' open' : ''}" id="ad-${date}">
+          <button class="archive-day-btn" onclick="toggleArchiveDay('${date}')">
+            <span class="archive-day-date">${fmt(date)}</span>
+            <span class="archive-day-count">${visits.length} visit${visits.length !== 1 ? 's' : ''}</span>
+            <span class="archive-day-chev">▼</span>
+          </button>
+          <div class="archive-visits">
+            ${visits.map(v => `<div class="archive-visit-row">
+              <span class="archive-visit-child">${v.child_code}</span>
+              <span class="archive-visit-space">${spaceName(v.space)}</span>
+              ${v.observations ? `<span class="archive-visit-obs">${v.observations}</span>` : ''}
+            </div>`).join('')}
+          </div>
+        </div>`
+      }).join('')}
+    </div>`
+  }
+
+  function toggleArchiveDay(date) {
+    document.getElementById(`ad-${date}`)?.classList.toggle('open')
+  }
+
   function renderCoverage() {
     const el = document.getElementById('coverage-rows')
     if (!el) return
@@ -1740,6 +1860,8 @@
     // Refresh visits locally
     allVisits = await db('space_visits')
     renderCoverage()
+    renderDiversityWatch()
+    renderVisitArchive()
 
     // Reset form (keep space + date for quick multi-entry)
     document.getElementById('visit-child').value = ''
