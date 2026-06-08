@@ -2062,9 +2062,17 @@
               <div class="reading-section-label">One question it raises</div>
               <div class="reading-question">${escHtml(r.one_question)}</div>
             </div>
-            ${hasRefl
-              ? `<div class="reading-past-refl"><div class="reading-past-refl-label">Your reflection</div>${escHtml(r.reflection)}</div>`
-              : `<div class="reading-no-refl">No reflection saved for this reading.</div>`}
+            <div style="margin-top:0.85rem;">
+              <div class="reading-refl-label" style="margin-bottom:0.4rem;">
+                Your reflection
+                ${hasRefl ? '<span class="badge-reflected">Reflected ✓</span>' : ''}
+              </div>
+              <textarea class="reading-refl-textarea" id="refl-${r.id}" placeholder="What does this mean for your practice? What will you carry forward?">${hasRefl ? escHtml(r.reflection) : ''}</textarea>
+              <div class="reading-refl-save-row">
+                <button class="readings-save-btn" id="refl-btn-${r.id}" onclick="saveReflection('${r.id}')">Save reflection</button>
+                <span class="readings-save-msg" id="refl-msg-${r.id}"></span>
+              </div>
+            </div>
           </div>
         </div>`
       }).join('')
