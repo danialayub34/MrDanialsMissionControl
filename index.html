@@ -1002,43 +1002,27 @@
 
   // ── Spaces ──
   const SPACES = [
-    { name:'Games Table', type:'Living inquiry', key:'games-table' },
-    { name:'Kopitiam', type:'Living inquiry', key:'kopitiam' },
-    { name:'Light Space', type:'Living inquiry', key:'light-space' },
-    { name:'Construction Space', type:'Living inquiry', key:'construction-space' },
-    { name:'Clay Workshop', type:'Living inquiry', key:'clay-workshop' },
-    { name:'Investigation Station', type:'Investigation', key:'investigation-station' },
-    { name:'Ruang Seni', type:'Investigation', key:'ruang-seni' },
-    { name:'The Digital Age', type:'Investigation', key:'the-digital-age' },
+    { name:'Games Table', key:'games-table' },
+    { name:'Kopitiam', key:'kopitiam' },
+    { name:'Kelip-Kelip', key:'light-space' },
+    { name:'Loose Parts Space', key:'construction-space' },
+    { name:'Clay Space', key:'clay-workshop' },
+    { name:'Investigation Station', key:'investigation-station' },
+    { name:'Ruang Seni', key:'ruang-seni' },
   ]
 
   function renderSpaces() {
-    const living = SPACES.filter(s => s.type === 'Living inquiry')
-    const invest = SPACES.filter(s => s.type === 'Investigation')
-    let html = ''
-    html += `<div class="spaces-group-label">Living Inquiry Spaces</div><div class="spaces-grid">`
-    living.forEach(s => {
+    let html = '<div class="spaces-grid">'
+    SPACES.forEach(s => {
       const t = allThreads.find(x => x.space === s.key)
       const cls = t ? 'space-tile live-t' : 'space-tile'
       const hint = t ? `${t.concepts_explored?.[0] || ''} · Rung ${t.ladder_rung}` : 'No thread yet'
       html += `<div class="${cls}" onclick="switchTab('threads',document.querySelectorAll('.tab-btn')[2])">
-        <div class="tile-type">${s.type}</div>
         <div class="tile-name">${s.name}</div>
         <div class="tile-hint">${hint}</div>
       </div>`
     })
-    html += `</div><div class="spaces-group-label" style="margin-top:0.75rem;">Investigation Cycle Spaces</div><div class="spaces-grid">`
-    invest.forEach(s => {
-      const c = allCycles.find(x => x.space === s.key || x.investigation_name?.toLowerCase().includes(s.key.replace('-',' ')))
-      const cls = c ? 'space-tile live-c' : 'space-tile'
-      const hint = c ? `${c.investigation_name?.split('—')[0]?.trim() || ''} · Wk ${c.week_number} · Rung ${c.ladder_rung}` : 'No cycle yet'
-      html += `<div class="${cls}" onclick="switchTab('investigations',document.querySelectorAll('.tab-btn')[3])">
-        <div class="tile-type">${s.type}</div>
-        <div class="tile-name">${s.name}</div>
-        <div class="tile-hint">${hint}</div>
-      </div>`
-    })
-    html += `</div>`
+    html += '</div>'
     document.getElementById('spaces-container').innerHTML = html
   }
 
