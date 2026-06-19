@@ -532,16 +532,13 @@
       <div class="ladder">
         <button class="rung-btn all-btn active" onclick="filterRung(0,this)">Show all</button>
         <button class="rung-btn" id="rung-1" onclick="filterRung(1,this)">
-          <span class="rung-n">1</span><span class="rung-text">How do we care for ourselves and each other?</span><span class="rung-pip"></span>
+          <span class="rung-n">1</span><span class="rung-text">Wonder — noticing what is precious and fragile</span><span class="rung-pip"></span>
         </button>
         <button class="rung-btn" id="rung-2" onclick="filterRung(2,this)">
-          <span class="rung-n">2</span><span class="rung-text">How do we care for our materials and spaces?</span><span class="rung-pip"></span>
+          <span class="rung-n">2</span><span class="rung-text">Responsibility — understanding what needs care, and why</span><span class="rung-pip"></span>
         </button>
         <button class="rung-btn" id="rung-3" onclick="filterRung(3,this)">
-          <span class="rung-n">3</span><span class="rung-text">How do we care for the world around us?</span><span class="rung-pip"></span>
-        </button>
-        <button class="rung-btn" id="rung-4" onclick="filterRung(4,this)">
-          <span class="rung-n">4</span><span class="rung-text">What changes do I want to make to the world I live in?</span><span class="rung-pip"></span>
+          <span class="rung-n">3</span><span class="rung-text">Agency — making choices about what we can do and change</span><span class="rung-pip"></span>
         </button>
       </div>
       <div class="lens-note">⟡ Cross-cutting lens: <em>Choices</em> — at every rung</div>
@@ -573,7 +570,6 @@
         <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
         <button class="tab-btn" onclick="switchTab('spark',this)">Spark <span class="tab-count" id="tc-sparks">–</span></button>
         <button class="tab-btn" onclick="switchTab('threads',this)">Inquiry Threads <span class="tab-count" id="tc-threads">–</span></button>
-        <button class="tab-btn" onclick="switchTab('investigations',this)">Investigations <span class="tab-count" id="tc-cycles">–</span></button>
         <button class="tab-btn" onclick="switchTab('tracker',this)">Space Tracker</button>
         <button class="tab-btn" onclick="switchTab('carenotes',this)">Care Notes <span class="tab-count" id="tc-care">–</span></button>
         <button class="tab-btn" onclick="switchTab('readings',this)">Readings</button>
@@ -614,11 +610,6 @@
       <div id="threads-container"><div class="loading"><span class="spinner"></span>Loading threads…</div></div>
     </div>
 
-    <!-- Investigations -->
-    <div class="tab-panel" id="panel-investigations">
-      <div id="cycles-container"><div class="loading"><span class="spinner"></span>Loading investigations…</div></div>
-    </div>
-
     <!-- Care Notes -->
     <div class="tab-panel" id="panel-carenotes">
       <div class="care-legend">
@@ -643,10 +634,9 @@
             <label class="form-label">Ladder rung</label>
             <select class="form-select" id="spark-rung">
               <option value="">Select rung…</option>
-              <option value="Rung 1">Rung 1 — Care for each other</option>
-              <option value="Rung 2">Rung 2 — Care for spaces</option>
-              <option value="Rung 3">Rung 3 — Care for the world</option>
-              <option value="Rung 4">Rung 4 — Agency</option>
+              <option value="1">Rung 1 — Wonder</option>
+              <option value="2">Rung 2 — Responsibility</option>
+              <option value="3">Rung 3 — Agency</option>
               <option value="Other">Other / Cross-cutting</option>
             </select>
           </div>
@@ -916,15 +906,14 @@
   function renderStats() {
     const uniqueChildren = new Set(allCareNotes.map(n => n.child_code)).size
     document.getElementById('tc-threads').textContent = allThreads.length
-    document.getElementById('tc-cycles').textContent = allCycles.length
     document.getElementById('tc-care').textContent = uniqueChildren
   }
 
   function renderPulse() {
     const el = document.getElementById('pulse-card')
     if (!el) return
-    const TERM_START = new Date('2026-06-22T00:00:00+08:00')
-    const TERM_END   = new Date('2026-08-30T00:00:00+08:00')
+    const TERM_START = new Date('2026-06-29T00:00:00+08:00')
+    const TERM_END   = new Date('2026-09-04T00:00:00+08:00')
     const now        = new Date(Date.now() + 8*60*60*1000)
     now.setHours(0,0,0,0)
     const msDay = 1000*60*60*24
@@ -934,7 +923,7 @@
     if (daysToStart > 0) {
       el.innerHTML = `
         <div style="font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-size:1.3rem;color:var(--ink);line-height:1;">Starts in ${daysToStart}</div>
-        <div style="font-size:0.67rem;color:var(--ink-faint);margin-top:3px;">days · Term 3 begins 22 June 2026</div>`
+        <div style="font-size:0.67rem;color:var(--ink-faint);margin-top:3px;">days · Term 3 begins 29 June 2026</div>`
       return
     }
     const daysIn  = totalDays - daysToEnd
@@ -1407,7 +1396,7 @@
   }
 
   function rungQ(r) {
-    const qs = ['','How do we care for ourselves and each other?','How do we care for our materials and spaces?','How do we care for the world around us?','What changes do I want to make to the world I live in?']
+    const qs = ['','Wonder','Responsibility','Agency']
     return qs[r] || ''
   }
 
